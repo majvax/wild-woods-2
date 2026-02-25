@@ -19,6 +19,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install SDL2 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
+            libsdl2-ttf-dev libfreetype6-dev pkg-config
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -42,3 +49,6 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
