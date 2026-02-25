@@ -1,6 +1,6 @@
 
 
-= Description
+# Description
 Le but du jeu est de faire avancer un convoi militaire dans un monde apocalyptique.
 Les joueurs doivent gérer les ressources (essence, nourriture, munitions) et faire face à des événement (attaques de zombies, de bandits, tempêtes de sable, etc...)
 Les joueurs auront le choix entre plusieurs chemin pour avancer, chacun avec ses avantages et inconvénients (plus rapide mais plus dangereux, plus long mais plus sûr, etc...)
@@ -18,3 +18,10 @@ Le jeu est fini lorsque les joueurs ont synthétisé l'antidote et sauvé l'huma
 Une option pour continuer une partie infini est alors proposé, le but étant de survivre le plus longtemps possible et de parcourir la plus grande distance possible.
 
 
+# Running
+
+
+## Wayland
+```bash
+SDL_VIDEODRIVER='x11'
+```

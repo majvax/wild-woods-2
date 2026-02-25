@@ -7,7 +7,7 @@ def main() -> None:
 
     screen_width = 1280
     screen_height = 720
-    screen = pygame.display.set_mode((screen_width, screen_height))
+    screen = pygame.display.set_mode((screen_width, screen_height), pygame.SCALED)
     pygame.display.set_caption("Wild Woods 2")
 
     clock = pygame.time.Clock()
