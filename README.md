@@ -1,4 +1,6 @@
-
+DEHEZ Guillaume
+VIARD-CRETAT Hugo
+BALLANDRAS Enzo
 
 # Description
 Le but du jeu est de faire avancer un convoi militaire dans un monde apocalyptique.
