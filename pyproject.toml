@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "esper>=3.7",
     "pygame-ce>=2.5.6",
 ]
 
@@ -20,7 +21,7 @@ dev = [
 package = true
 
 [project.scripts]
-game = "main:main"
+game = "client.main:main"
 
 [tool.taskipy.tasks]
 lint = "ruff check src --fix"
