@@ -27,3 +27,16 @@ Une option pour continuer une partie infini est alors proposé, le but étant de
 ```bash
 SDL_VIDEODRIVER='x11'
 ```
+
+
+
+
+## Design process
+
+On a décidé de suivre un processus de design simple:
+une classe `SceneManageur` qui possède une liste traitée comme une stack de Scene, permettant de mettre à jour et donc d'afficher les différentes scène dans un ordre précis, de la dernière vers la première Scène.
+
+Les Scènes dérives d'une classe abstraite appelée `Scene`.
+Les différentes scènes override différentes méthode de la class base.
+
+Chaque Scène possède son propre ecs
