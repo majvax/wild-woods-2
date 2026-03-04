@@ -17,6 +17,7 @@ class Scene(ABC):
     def _cleanup(self) -> None:
         esper.switch_world(self._id)
         self.on_exit()
+        esper.switch_world("default")
         esper.delete_world(self._id)
 
     @abstractmethod
@@ -70,6 +71,6 @@ class SceneManager:
         self._scenes.pop()
 
     def process(self, dt: float) -> None:
-        for scene in self._scenes:
+        for scene in reversed(self._scenes):
             if not scene._process(dt):
                 break
