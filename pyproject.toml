@@ -11,6 +11,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.38.2",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "ruff>=0.15.2",
@@ -26,7 +27,7 @@ game = "client.main:main"
 [tool.taskipy.tasks]
 lint = "ruff check src --fix"
 format = "ruff format src"
-check = "mypy src"
+check = "mypy src && basedpyright"
 test = "pytest"
 all = "task format && task lint && task check"
 init = "git config core.hooksPath .githooks"
@@ -34,3 +35,11 @@ init = "git config core.hooksPath .githooks"
 
 [tool.ruff.lint]
 ignore = ["F841"]
+
+[tool.basedpyright]
+reportUnusedCallResult = "none"
+exclude = [
+    "tests",
+    "**/__pycache__",
+    ".venv"
+]
