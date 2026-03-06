@@ -6,19 +6,11 @@ import esper
 
 class Scene(ABC):
     def __init__(self) -> None:
-        self._id = uuid.uuid4().hex
-        esper.switch_world(self._id)
-        self.on_enter()
+        self._id: str = uuid.uuid4().hex
 
-    def _process(self, dt: float) -> bool:
-        esper.switch_world(self._id)
-        return self.process(dt)
-
-    def _cleanup(self) -> None:
-        esper.switch_world(self._id)
-        self.on_exit()
-        esper.switch_world("default")
-        esper.delete_world(self._id)
+    @property
+    def id(self) -> str:
+        return self._id
 
     @abstractmethod
     def on_enter(self) -> None: ...
@@ -50,7 +42,7 @@ class SceneManager:
         """Check if there are no scenes in the stack."""
         return not self._scenes
 
-    def push[T: Scene](self, scene: type[T], *args, **kwargs) -> T:
+    def push[T: Scene](self, scene: type[T], *args: object, **kwargs: object) -> T:
         """Push a new scene on top of the stack.
 
         Args:
@@ -61,16 +53,23 @@ class SceneManager:
             The instance of the scene that was created and pushed.
         """
         instance = scene(*args, **kwargs)
+        esper.switch_world(instance.id)
+        instance.on_enter()
         self._scenes.append(instance)
         return instance
 
     def pop(self) -> None:
         if not self._scenes:
             return
-        self._scenes[-1]._cleanup()
+        scene = self._scenes[-1]
+        esper.switch_world(scene.id)
+        scene.on_exit()
+        esper.switch_world("default")
+        esper.delete_world(scene.id)
         self._scenes.pop()
 
     def process(self, dt: float) -> None:
         for scene in reversed(self._scenes):
-            if not scene._process(dt):
+            esper.switch_world(scene.id)
+            if not scene.process(dt):
                 break
