@@ -1,3 +1,5 @@
+from typing import override
+
 import pytest
 
 from client.core.scene import Scene, SceneManager
@@ -7,19 +9,22 @@ class DummyScene(Scene):
     """Minimal concrete Scene that records lifecycle calls."""
 
     def __init__(self, *, propagate: bool = False) -> None:
-        self.entered = False
-        self.exited = False
+        self.entered: bool = False
+        self.exited: bool = False
         self.process_calls: list[float] = []
-        self._propagate = propagate
+        self._propagate: bool = propagate
         super().__init__()
 
+    @override
     def on_enter(self) -> None:
         self.entered = True
 
+    @override
     def process(self, dt: float) -> bool:
         self.process_calls.append(dt)
         return self._propagate
 
+    @override
     def on_exit(self) -> None:
         self.exited = True
 
@@ -32,9 +37,11 @@ class ArgScene(Scene):
         self.label = label
         super().__init__()
 
+    @override
     def on_enter(self) -> None:
         pass
 
+    @override
     def process(self, dt: float) -> bool:
         return False
 
@@ -67,7 +74,7 @@ def test_push_forwards_args_and_kwargs():
 
 def test_push_stacks_scenes():
     sm = SceneManager()
-    first = sm.push(DummyScene)
+    sm.push(DummyScene)
     second = sm.push(DummyScene)
     assert sm.current is second
 
