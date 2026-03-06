@@ -34,3 +34,7 @@ init = "git config core.hooksPath .githooks"
 
 [tool.ruff.lint]
 ignore = ["F841"]
+
+
+[tool.mypy]
+ignore_missing_imports = true
