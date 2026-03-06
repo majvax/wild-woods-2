@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+import os
 import subprocess
 import sys
-import os
+
 
 def run(command):
-    result = subprocess.run(command, shell=(os.name == 'nt'))
+    result = subprocess.run(command, shell=(os.name == "nt"))
     return result.returncode
+
 
 def main():
     if run(["uv", "run", "task", "format"]) != 0:
@@ -16,8 +18,6 @@ def main():
         print("Lint failed")
         sys.exit(1)
 
-    run(["git", "add", "-u"])
-
     if run(["uv", "run", "task", "check"]) != 0:
         print("Type check failed")
         sys.exit(1)
@@ -27,6 +27,7 @@ def main():
         sys.exit(1)
 
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
