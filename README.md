@@ -19,14 +19,49 @@ Le jeu est fini lorsque les joueurs ont synthétisé l'antidote et sauvé l'huma
 
 Une option pour continuer une partie infini est alors proposé, le but étant de survivre le plus longtemps possible et de parcourir la plus grande distance possible.
 
+# Comment jouer ?
+Clone le projet:
+```bash
+git clone https://github.com/majvax/wild-woods-2.git
+```
+## python
+Créer un environnement virtuel
+```bash
+python3 -m venv .venv
+```
+Activer l'environnement virtuel
+```bash
+source .venv/bin/activate # .venv/bin/activate.ps1 pour windows
+```
+Installer les dépendances
+```bash
+pip install .
+```
+Lancer le jeu
+```bash
+game
+```
 
-# Running
+## uv
+Création de l'environnement virtuel et installation des dépendances
+```bash
+uv sync --no-dev --no-editable
+```
+Lancer le jeu
+```bash
+uv run game
+```
 
 
-## Wayland
+
+# Troubleshooting
+
+## fenêtre pygame pas de la bonne taille sur wayland 
+sur wayland cette variable d'environnement doit être définie pour que le jeu puisse être affiché correctement:
 ```bash
 SDL_VIDEODRIVER='x11'
 ```
+
 
 
 
