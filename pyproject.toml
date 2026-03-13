@@ -3,13 +3,15 @@ name = "wild-woods-2"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
+    "esper>=3.7",
     "pygame-ce>=2.5.6",
 ]
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.38.2",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "ruff>=0.15.2",
@@ -20,12 +22,12 @@ dev = [
 package = true
 
 [project.scripts]
-game = "main:main"
+game = "client.main:main"
 
 [tool.taskipy.tasks]
 lint = "ruff check src --fix"
 format = "ruff format src"
-check = "mypy src"
+check = "mypy src && basedpyright"
 test = "pytest"
 all = "task format && task lint && task check"
 init = "git config core.hooksPath .githooks"
@@ -33,3 +35,11 @@ init = "git config core.hooksPath .githooks"
 
 [tool.ruff.lint]
 ignore = ["F841"]
+
+[tool.basedpyright]
+reportUnusedCallResult = "none"
+exclude = [
+    "tests",
+    "**/__pycache__",
+    ".venv"
+]
