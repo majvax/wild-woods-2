@@ -36,6 +36,12 @@ init = "git config core.hooksPath .githooks"
 [tool.ruff.lint]
 ignore = ["F841"]
 
+
+[tool.mypy]
+mypy_path = "src"
+explicit_package_bases = true
+
+
 [tool.basedpyright]
 reportUnusedCallResult = "none"
 exclude = [
