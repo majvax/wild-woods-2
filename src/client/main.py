@@ -1,61 +1,101 @@
-import pygame
+import math
+from typing import final, override
+
 import esper
-from client.component.physics import Position, Velocity
+import pygame
+from esper import Processor
+
+from client.component.gameplay import Sprite
+from client.component.physics import Position, Speed, Velocity
+from client.component.tags import PlayerTag
+from client.core.engine import Engine
+from client.core.scene import Scene
 from client.factory.player import create_player
 
 
-class InputSystem:
-    def process(self):
+@final
+class InputSystem(Processor):
+    @override
+    def process(self, _):
         keys = pygame.key.get_pressed()
-        for ent, (vel) in esper.get_component(Velocity):
+        for _, (vel, speed, _) in esper.get_components(Velocity, Speed, PlayerTag):
             vel.vx = 0
             vel.vy = 0
             if keys[pygame.K_z]:
-                vel.vy -= 10
+                vel.vy -= speed.value
             if keys[pygame.K_s]:
-                vel.vy += 10
+                vel.vy += speed.value
             if keys[pygame.K_q]:
-                vel.vx -= 10
+                vel.vx -= speed.value
             if keys[pygame.K_d]:
-                vel.vx += 10
+                vel.vx += speed.value
+
+            if vel.vx != 0 and vel.vy != 0:
+                vel.vx /= math.sqrt(2)
+                vel.vy /= math.sqrt(2)
 
 
-class MovementSystem:
-    def process(self):
-        for ent, (vel, pos) in esper.get_components(Velocity, Position):
-            pos.x += vel.vx
-            pos.y += vel.vy
+@final
+class MovementSystem(Processor):
+    @override
+    def process(self, dt: float):
+        for _, (vel, pos) in esper.get_components(Velocity, Position):
+            pos.x += vel.vx * dt
+            pos.y += vel.vy * dt
 
 
-# pygame setup
-def main():
-    pygame.init()
-    info = pygame.display.Info()
-    screen = pygame.display.set_mode((info.current_w, info.current_h))
-    clock = pygame.time.Clock()
-    running = True
+@final
+class RenderSystem(Processor):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self.screen = screen
+        self.font = pygame.font.SysFont("Arial", 18)
 
-    esper.add_processor(InputSystem())
-    esper.add_processor(MovementSystem())
+    @override
+    def process(self, dt: float):
+        self.screen.fill("white")
+        for _, (pos, sprite) in esper.get_components(Position, Sprite):
+            self.screen.blit(
+                sprite.surface,
+                (
+                    pos.x - sprite.surface.get_width() / 2,
+                    pos.y - sprite.surface.get_height() / 2,
+                ),
+            )
+            # pygame.draw.circle(self.screen, "black", (pos.x, pos.y), radius=40)
 
-    create_player(Position(info.current_w / 2, info.current_h / 2))
+        fps = int(1.0 / dt) if dt > 0 else 0
+        fps_text = self.font.render(f"FPS: {fps}", True, pygame.Color("black"))
+        self.screen.blit(fps_text, (10, 10))
 
-    while running:
-        # poll for events
-        # pygame.QUIT event means the user clicked X to close your window
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        esper.process()
-        # fill the screen with a color to wipe away anything from last frame
-        screen.fill("purple")
-        for ent, (pos) in esper.get_component(Position):
-            pygame.draw.circle(screen, "black", (pos.x, pos.y), radius=40)
-        # RENDER YOUR GAME HERE
 
-        # flip() the display to put your work on screen
-        pygame.display.flip()
+@final
+class GameScene(Scene):
+    _screen: pygame.Surface
 
-        clock.tick(60)  # limits FPS to 60
+    def __init__(self, engine: Engine):
+        super().__init__()
+        self._screen = engine.screen
 
-    pygame.quit()
+    @override
+    def on_enter(self) -> None:
+        esper.add_processor(InputSystem())
+        esper.add_processor(MovementSystem())
+        esper.add_processor(RenderSystem(self._screen))
+
+        create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
+
+    @override
+    def process(self, dt: float) -> bool:
+        esper.process(dt)
+        return True
+
+
+def main() -> int:
+    engine = Engine()
+    engine.sm.push(GameScene, engine)
+    return engine.run()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
