@@ -1,6 +1,6 @@
 import math
 import random
-from typing import Callable, final, override
+from typing import final, override
 
 import esper
 import pygame
