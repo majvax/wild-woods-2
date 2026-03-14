@@ -1,4 +1,5 @@
 import math
+import random
 from typing import final, override
 
 import esper
@@ -10,6 +11,7 @@ from client.component.physics import Position, Speed, Velocity
 from client.component.tags import PlayerTag
 from client.core.engine import Engine
 from client.core.scene import Scene
+from client.factory.bandit import create_bandit
 from client.factory.player import create_player
 
 
@@ -62,7 +64,6 @@ class RenderSystem(Processor):
                     pos.y - sprite.surface.get_height() / 2,
                 ),
             )
-            # pygame.draw.circle(self.screen, "black", (pos.x, pos.y), radius=40)
 
         fps = int(1.0 / dt) if dt > 0 else 0
         fps_text = self.font.render(f"FPS: {fps}", True, pygame.Color("black"))
@@ -72,10 +73,12 @@ class RenderSystem(Processor):
 @final
 class GameScene(Scene):
     _screen: pygame.Surface
+    _timer: float
 
     def __init__(self, engine: Engine):
         super().__init__()
         self._screen = engine.screen
+        self._timer = 0.0
 
     @override
     def on_enter(self) -> None:
@@ -84,10 +87,25 @@ class GameScene(Scene):
         esper.add_processor(RenderSystem(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
+        create_bandit(Position(100, 100))
+        create_bandit(Position(200, 200))
 
     @override
     def process(self, dt: float) -> bool:
+        # Spawn bandits every 5 seconds
+        self._timer += dt
+        if self._timer > 1:
+            pos = Position(
+                self._screen.get_width() * 0.1
+                + self._screen.get_width() * 0.8 * random.random(),
+                self._screen.get_height() * 0.1
+                + self._screen.get_height() * 0.8 * random.random(),
+            )
+            create_bandit(pos)
+            self._timer = 0
+
         esper.process(dt)
+
         return True
 
 
