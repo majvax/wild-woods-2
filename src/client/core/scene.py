@@ -1,5 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
+from typing import final
 
 import esper
 
@@ -8,6 +9,7 @@ class Scene(ABC):
     def __init__(self) -> None:
         self._id: str = uuid.uuid4().hex
 
+    @final
     @property
     def id(self) -> str:
         return self._id
