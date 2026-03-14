@@ -44,6 +44,7 @@ explicit_package_bases = true
 
 [tool.basedpyright]
 reportUnusedCallResult = "none"
+reportMissingTypeStubs = "none"
 exclude = [
     "tests",
     "**/__pycache__",
