@@ -1,6 +1,6 @@
 import math
 import random
-from typing import final, override
+from typing import Callable, final, override
 
 import esper
 import pygame
@@ -64,9 +64,13 @@ class RenderSystem(Processor):
                     pos.y - sprite.surface.get_height() / 2,
                 ),
             )
-
         fps = int(1.0 / dt) if dt > 0 else 0
-        fps_text = self.font.render(f"FPS: {fps}", True, pygame.Color("black"))
+        num_ent = len(list(esper.get_entities()))
+        fps_text = self.font.render(
+            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES",
+            True,
+            pygame.Color("black"),
+        )
         self.screen.blit(fps_text, (10, 10))
 
 
@@ -87,14 +91,12 @@ class GameScene(Scene):
         esper.add_processor(RenderSystem(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
-        create_bandit(Position(100, 100))
-        create_bandit(Position(200, 200))
 
     @override
     def process(self, dt: float) -> bool:
         # Spawn bandits every 5 seconds
         self._timer += dt
-        if self._timer > 1:
+        if self._timer > 0.1:
             pos = Position(
                 self._screen.get_width() * 0.1
                 + self._screen.get_width() * 0.8 * random.random(),
