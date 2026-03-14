@@ -1,9 +1,13 @@
 import esper
-from client.component.physics import Position, Velocity
+import pygame
+
+from client.component.gameplay import Sprite
+from client.component.physics import Position, Speed, Velocity
+from client.component.tags import PlayerTag
 
 
 def create_player(pos: Position):
-    esper.create_entity(
-        pos,
-        Velocity(0, 0),
-    )
+    surface = pygame.image.load(
+        "sprite/player/standard/idle/left/1.png"
+    ).convert_alpha()
+    esper.create_entity(pos, Velocity(0, 0), Speed(300), Sprite(surface), PlayerTag())
