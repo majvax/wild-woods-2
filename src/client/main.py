@@ -14,6 +14,8 @@ from client.factory.bandit import create_bandit
 from client.factory.player import create_player
 from client.processor import BrainProc, TargetingProc
 
+from client.core.map_generator import generer_surface_fond
+
 
 @final
 class InputSystem(Processor):
@@ -52,10 +54,13 @@ class RenderSystem(Processor):
         super().__init__()
         self.screen = screen
         self.font = pygame.font.SysFont("Arial", 18)
+        largeur, hauteur = self.screen.get_size()
+        self._background = generer_surface_fond(largeur, hauteur)
 
     @override
     def process(self, dt: float):
         self.screen.fill("white")
+        self.screen.blit(self._background)
         for _, (pos, sprite) in esper.get_components(Position, Sprite):
             self.screen.blit(
                 sprite.surface,
