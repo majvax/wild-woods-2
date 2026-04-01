@@ -1,6 +1,8 @@
 from typing import override
+from unittest.mock import MagicMock, call, patch
 
 import pytest
+import pygame
 
 from client.core.scene import Scene, SceneManager
 
@@ -20,7 +22,7 @@ class DummyScene(Scene):
         self.entered = True
 
     @override
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         self.process_calls.append(dt)
         return self._propagate
 
@@ -42,7 +44,7 @@ class ArgScene(Scene):
         pass
 
     @override
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         return False
 
 
@@ -115,7 +117,8 @@ def test_process_calls_scenes_in_order():
     first = sm.push(DummyScene, propagate=True)
     second = sm.push(DummyScene, propagate=True)
 
-    sm.process(0.016)
+    events = pygame.event.get()
+    sm.process(0.016, events)
 
     assert first.process_calls == [0.016]
     assert second.process_calls == [0.016]
@@ -127,7 +130,8 @@ def test_process_stops_propagation_when_false():
     second = sm.push(DummyScene, propagate=False)
     third = sm.push(DummyScene, propagate=True)
 
-    sm.process(0.5)
+    events = pygame.event.get()
+    sm.process(0.5, events)
 
     assert third.process_calls == [0.5]
     assert second.process_calls == [0.5]
@@ -138,7 +142,8 @@ def test_process_propagates_through_all_when_all_true():
     sm = SceneManager()
     scenes = [sm.push(DummyScene, propagate=True) for _ in range(5)]
 
-    sm.process(1.0)
+    events = pygame.event.get()
+    sm.process(1.0, events)
 
     for s in scenes:
         assert s.process_calls == [1.0]
@@ -146,7 +151,8 @@ def test_process_propagates_through_all_when_all_true():
 
 def test_process_on_empty_manager_is_noop():
     sm = SceneManager()
-    sm.process(0.016)  # should not raise
+    events = pygame.event.get()
+    sm.process(0.016, events)  # should not raise
 
 
 def test_push_pop_push_works():
@@ -161,16 +167,18 @@ def test_push_pop_push_works():
 def test_multiple_process_calls_accumulate():
     sm = SceneManager()
     scene = sm.push(DummyScene)
-    sm.process(0.1)
-    sm.process(0.2)
-    sm.process(0.3)
+    events = pygame.event.get()
+    sm.process(0.1, events)
+    sm.process(0.2, events)
+    sm.process(0.3, events)
     assert scene.process_calls == [0.1, 0.2, 0.3]
 
 
 def test_process_dt_passed_correctly():
     sm = SceneManager()
     scene = sm.push(DummyScene)
-    sm.process(0.033)
+    events = pygame.event.get()
+    sm.process(0.033, events)
     assert scene.process_calls[-1] == pytest.approx(0.033)
 
 
@@ -194,7 +202,8 @@ def test_process_after_pop():
     first = sm.push(DummyScene, propagate=True)
     second = sm.push(DummyScene, propagate=True)
     sm.pop()
-    sm.process(0.5)
+    events = pygame.event.get()
+    sm.process(0.5, events)
     assert first.process_calls == [0.5]
     assert second.process_calls == []  # was popped, should not receive ticks
 
@@ -202,7 +211,8 @@ def test_process_after_pop():
 def test_single_scene_propagate_false():
     sm = SceneManager()
     scene = sm.push(DummyScene, propagate=False)
-    sm.process(0.1)
+    events = pygame.event.get()
+    sm.process(0.1, events)
     assert scene.process_calls == [0.1]
 
 
