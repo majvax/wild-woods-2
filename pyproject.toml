@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "esper>=3.7",
+    "noise>=1.2.2",
     "pygame-ce>=2.5.6",
 ]
 
@@ -41,8 +42,12 @@ ignore = ["F841"]
 mypy_path = "src"
 explicit_package_bases = true
 
+[[tool.mypy.overrides]]
+module = "noise"
+ignore_missing_imports = true
 
 [tool.basedpyright]
+stubPath = "typings"
 reportUnusedCallResult = "none"
 reportMissingTypeStubs = "none"
 exclude = [
