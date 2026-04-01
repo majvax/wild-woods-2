@@ -75,6 +75,54 @@ class RenderSystem(Processor):
 
 
 @final
+class PauseScene(Scene):
+    _screen: pygame.Surface
+    _overlay: pygame.Surface
+    _font_title: pygame.font.Font
+    _font_hint: pygame.font.Font
+
+    def __init__(self, engine: Engine):
+        super().__init__()
+        self._screen = engine.screen
+        self._engine = engine
+
+        w, h = self._screen.get_size()
+        self._overlay = pygame.Surface((w, h), pygame.SRCALPHA)
+        self._overlay.fill((0, 0, 0, 180))  # noir semi-transparent
+
+        self._font_title = pygame.font.SysFont("Arial", 64, bold=True)
+        self._font_hint = pygame.font.SysFont("Arial", 28)
+
+    @override
+    def on_enter(self) -> None:
+        pass  # on ne touche pas aux processors : le jeu est figé dessous
+
+    @override
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                    self._engine.sm.pop()
+
+        # Dessine l'overlay noir par-dessus le frame précédent
+        self._screen.blit(self._overlay, (0, 0))
+
+        w, h = self._screen.get_size()
+
+        title = self._font_title.render("PAUSE", True, pygame.Color("white"))
+        hint = self._font_hint.render(
+            "Appuie sur  ÉCHAP  ou  P  pour reprendre",
+            True,
+            pygame.Color("lightgray"),
+        )
+
+        self._screen.blit(title, title.get_rect(center=(w // 2, h // 2 - 40)))
+        self._screen.blit(hint, hint.get_rect(center=(w // 2, h // 2 + 40)))
+
+        return False
+
+
+@final
 class GameScene(Scene):
     _screen: pygame.Surface
     _timer: float
@@ -83,6 +131,7 @@ class GameScene(Scene):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
+        self._engine = engine
 
     @override
     def on_enter(self) -> None:
@@ -93,7 +142,13 @@ class GameScene(Scene):
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
 
     @override
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                    self._engine.sm.push(PauseScene, self._engine)
+                    return True
+
         # Spawn bandits every 5 seconds
         self._timer += dt
         if self._timer > 0.1:
