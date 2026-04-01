@@ -1,6 +1,9 @@
 import uuid
 from abc import ABC, abstractmethod
 from typing import final
+import pygame
+
+
 
 import esper
 
@@ -18,7 +21,7 @@ class Scene(ABC):
     def on_enter(self) -> None: ...
 
     @abstractmethod
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         """Called every frame.
 
         Returns:
@@ -70,8 +73,8 @@ class SceneManager:
         esper.delete_world(scene.id)
         self._scenes.pop()
 
-    def process(self, dt: float) -> None:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> None:
         for scene in reversed(self._scenes):
             esper.switch_world(scene.id)
-            if not scene.process(dt):
+            if not scene.process(dt, events):
                 break

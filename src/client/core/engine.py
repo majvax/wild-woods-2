@@ -47,11 +47,12 @@ class Engine:
         while self.is_running:
             dt = self._clock.tick(1000) / 1000
 
-            for event in pygame.event.get():
+            events = pygame.event.get()
+            for event in events:
                 if event.type == pygame.QUIT:
                     self.stop()
 
-            self._scene_manger.process(dt)
+            self._scene_manger.process(dt, events)
             pygame.display.flip()
 
         return self._stop_code
