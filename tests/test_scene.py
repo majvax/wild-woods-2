@@ -1,7 +1,7 @@
 from typing import override
 from unittest.mock import MagicMock, call, patch
 
-import pytest
+import pygame
 
 from client.core.scene import Scene
 
@@ -21,7 +21,7 @@ class DummyScene(Scene):
         self.entered = True
 
     @override
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         self.process_calls.append(dt)
         return self._propagate
 
@@ -38,7 +38,7 @@ class MinimalScene(Scene):
         pass
 
     @override
-    def process(self, dt: float) -> bool:
+    def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         return False
 
 
@@ -58,7 +58,8 @@ def test_process_switches_world_and_delegates(mock: MagicMock):
     scene = DummyScene()
     mock.reset_mock()
 
-    result = scene.process(0.016)
+    events = pygame.event.get()
+    result = scene.process(0.016, events)
 
     assert result is False
     assert scene.process_calls == [0.016]
@@ -71,4 +72,5 @@ def test_on_exit_default_is_noop():
 
 def test_process_returns_true_when_propagate():
     scene = DummyScene(propagate=True)
-    assert scene.process(0.016) is True
+    events = pygame.event.get()
+    assert scene.process(0.016, events) is True
