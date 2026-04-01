@@ -1,5 +1,4 @@
 import math
-import random
 from typing import final, override
 
 import esper
@@ -13,6 +12,7 @@ from client.core.engine import Engine
 from client.core.scene import Scene
 from client.factory.bandit import create_bandit
 from client.factory.player import create_player
+from client.processor import BrainProc, TargetingProc
 
 
 @final
@@ -87,24 +87,27 @@ class GameScene(Scene):
     @override
     def on_enter(self) -> None:
         esper.add_processor(InputSystem())
+        esper.add_processor(TargetingProc())
+        esper.add_processor(BrainProc())
         esper.add_processor(MovementSystem())
         esper.add_processor(RenderSystem(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
+        create_bandit(Position(0, 0))
 
     @override
     def process(self, dt: float) -> bool:
         # Spawn bandits every 5 seconds
-        self._timer += dt
-        if self._timer > 0.1:
-            pos = Position(
-                self._screen.get_width() * 0.1
-                + self._screen.get_width() * 0.8 * random.random(),
-                self._screen.get_height() * 0.1
-                + self._screen.get_height() * 0.8 * random.random(),
-            )
-            create_bandit(pos)
-            self._timer = 0
+        # self._timer += dt
+        # if self._timer > 0.1:
+        #     pos = Position(
+        #         self._screen.get_width() * 0.1
+        #         + self._screen.get_width() * 0.8 * random.random(),
+        #         self._screen.get_height() * 0.1
+        #         + self._screen.get_height() * 0.8 * random.random(),
+        #     )
+        #     create_bandit(pos)
+        #     self._timer = 0
 
         esper.process(dt)
 
