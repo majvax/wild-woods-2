@@ -1,5 +1,5 @@
 import math
-from typing import final, override
+from typing import cast, final, override
 
 import esper
 import pygame
@@ -91,11 +91,15 @@ class PauseScene(Scene):
         self._engine = engine
 
         w, h = self._screen.get_size()
-        self._btn_resume = Button("Reprendre", NEON_PURPLE, 28, 12, 18, 10, on_click=self._resume)
-        self._btn_quit   = Button("Quitter",   NEON_PURPLE, 28, 12, 18, 10, on_click=self._quit)
+        self._btn_resume = Button(
+            "Reprendre", NEON_PURPLE, 28, 12, 18, 10, on_click=self._resume
+        )
+        self._btn_quit = Button(
+            "Quitter", NEON_PURPLE, 28, 12, 18, 10, on_click=self._quit
+        )
 
         self._btn_resume.set_rect(w // 2, h // 2 - 30)
-        self._btn_quit.set_rect(  w // 2, h // 2 + 30)
+        self._btn_quit.set_rect(w // 2, h // 2 + 30)
 
     def _resume(self) -> None:
         self._engine.sm.pop()
@@ -112,7 +116,7 @@ class PauseScene(Scene):
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
                     self._resume()
 
         for btn in (self._btn_resume, self._btn_quit):
@@ -148,7 +152,7 @@ class GameScene(Scene):
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
                     self._engine.sm.push(PauseScene, self._engine)
                     return True
 
