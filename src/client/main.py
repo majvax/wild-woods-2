@@ -14,12 +14,11 @@ from client.core.scene import Scene
 from client.factory.bandit import create_bandit
 from client.factory.player import create_player
 from client.processor import BrainProc, LootSystem, TargetingProc
-
 from client.ui_menus.components import (
-    Button,
-    ToggleSwitch,
     NEON_PURPLE,
     NEON_PURPLE_SWITCH,
+    Button,
+    ToggleSwitch,
 )
 
 
@@ -173,11 +172,7 @@ class GameScene(Scene):
         esper.add_processor(RenderSystem(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
-<<<<<<< HEAD
-        create_bandit(Position(100, 100))
-=======
         create_bandit(Position(400, 400))
->>>>>>> 28eba85 (feat: added basic loot dropping features)
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
