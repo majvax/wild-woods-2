@@ -91,8 +91,8 @@ class PauseScene(Scene):
         self._engine = engine
 
         w, h = self._screen.get_size()
-        self._btn_resume = Button("Reprendre", colors=NEON_PURPLE, on_click=self._resume)
-        self._btn_quit   = Button("Quitter",   colors=NEON_PURPLE, on_click=self._quit)
+        self._btn_resume = Button("Reprendre", NEON_PURPLE, 28, 12, 18, 10, on_click=self._resume)
+        self._btn_quit   = Button("Quitter",   NEON_PURPLE, 28, 12, 18, 10, on_click=self._quit)
 
         self._btn_resume.set_rect(w // 2, h // 2 - 30)
         self._btn_quit.set_rect(  w // 2, h // 2 + 30)
