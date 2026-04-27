@@ -9,12 +9,11 @@ from client.component.gameplay import Sprite
 from client.component.physics import Position, Speed, Velocity
 from client.component.tags import PlayerTag
 from client.core.engine import Engine
+from client.core.map_generator import generer_surface_fond
 from client.core.scene import Scene
 from client.factory.bandit import create_bandit
 from client.factory.player import create_player
-from client.processor import BrainProc, TargetingProc
-
-from client.core.map_generator import generer_surface_fond
+from client.processor import BrainProc, LootSystem, TargetingProc
 
 from client.ui_menus.components import (
     Button,
@@ -169,11 +168,16 @@ class GameScene(Scene):
         esper.add_processor(InputSystem())
         esper.add_processor(TargetingProc())
         esper.add_processor(BrainProc())
+        esper.add_processor(LootSystem())
         esper.add_processor(MovementSystem())
         esper.add_processor(RenderSystem(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
+<<<<<<< HEAD
         create_bandit(Position(100, 100))
+=======
+        create_bandit(Position(400, 400))
+>>>>>>> 28eba85 (feat: added basic loot dropping features)
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
