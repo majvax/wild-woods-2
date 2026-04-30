@@ -104,6 +104,81 @@ class Button:
         surface.blit(label, label.get_rect(center=self.rect.center))
 
 
+@final
+class ToggleSwitch:
+    def __init__(
+        self,
+        colors: dict[str, pygame.Color],
+        width: int,
+        height: int,
+        value: bool = False,
+        on_toggle: Callable[[bool], None] | None = None,
+        enabled: bool = True,
+    ):
+        self.colors = colors
+        self.on_toggle = on_toggle
+        self.enabled = enabled
+        self.value = value
+        self.rect = pygame.Rect(0, 0, width, height)
+
+        self._slide_t: float = 1.0 if value else 0.0
+        self._hover_t: float = 0.0
+
+    def set_rect(self, cx: int, y: int) -> None:
+        """Place le switch centré horizontalement sur cx, bord supérieur à y."""
+        self.rect.centerx = cx
+        self.rect.y = y
+
+    def update(self, dt: float, events: list[pygame.event.Event]) -> None:
+        speed = 8.0
+
+        if not self.enabled:
+            self._hover_t = 0.0
+            return
+
+        hovered = self.rect.collidepoint(pygame.mouse.get_pos())
+        self._hover_t = max(
+            0.0, min(1.0, self._hover_t + speed * dt * (1.0 if hovered else -1.0))
+        )
+
+        # Animation du glissement vers la cible
+        target = 1.0 if self.value else 0.0
+        self._slide_t += (target - self._slide_t) * min(1.0, speed * 2 * dt)
+
+        for event in events:
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and cast(int, event.button) == 1
+                and hovered
+            ):
+                self.value = not self.value
+                if self.on_toggle:
+                    self.on_toggle(self.value)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        c = self.colors
+        r = self.rect.height // 2  # rayon de la piste (pill shape)
+        knob_r = r - 3  # rayon du rond
+
+        if not self.enabled:
+            pygame.draw.rect(surface, c["track_disabled"], self.rect, border_radius=r)
+            pygame.draw.circle(
+                surface,
+                c["knob_disabled"],
+                (self.rect.x + r, self.rect.centery),
+                knob_r,
+            )
+            return
+
+        track = lerp_color(c["track_off"], c["track_on"], self._slide_t)
+        track = lerp_color(track, c["track_hover"], self._hover_t * 0.3)
+        pygame.draw.rect(surface, track, self.rect, border_radius=r)
+
+        # Position du rond : de (x + r) à (x + width - r)
+        knob_x = int(self.rect.x + r + (self.rect.width - 2 * r) * self._slide_t)
+        pygame.draw.circle(surface, c["knob"], (knob_x, self.rect.centery), knob_r)
+
+
 NEON_PURPLE: dict[str, pygame.Color] = {
     "bg": pygame.Color(22, 18, 42),  # fond normal
     "bg_hover": pygame.Color(30, 24, 64),  # fond au survol
@@ -115,4 +190,13 @@ NEON_PURPLE: dict[str, pygame.Color] = {
     "bg_disabled": pygame.Color(17, 17, 24),  # fond si désactivé
     "border_disabled": pygame.Color(51, 51, 51),  # bordure si désactivé
     "text_disabled": pygame.Color(85, 85, 85),  # texte si désactivé
+}
+
+NEON_PURPLE_SWITCH: dict[str, pygame.Color] = {
+    "track_off": pygame.Color(40, 35, 60),  # piste éteinte
+    "track_on": pygame.Color(106, 79, 207),  # piste allumée
+    "track_hover": pygame.Color(160, 125, 255),  # piste au survol
+    "knob": pygame.Color(230, 220, 255),  # rond
+    "track_disabled": pygame.Color(25, 25, 35),  # piste désactivée
+    "knob_disabled": pygame.Color(60, 60, 70),  # rond désactivé
 }
