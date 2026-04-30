@@ -122,8 +122,7 @@ class PauseScene(Scene):
         self._engine.sm.pop()
 
     def _quit(self) -> None:
-        pygame.quit()
-        raise SystemExit
+        self._engine.stop()
 
     @override
     def on_enter(self) -> None:
