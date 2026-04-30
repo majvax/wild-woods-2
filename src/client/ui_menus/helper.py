@@ -1,5 +1,3 @@
-# lerp et _get_font
-
 import pygame
 
 

@@ -16,7 +16,12 @@ from client.processor import BrainProc, TargetingProc
 
 from client.core.map_generator import generer_surface_fond
 
-from client.ui_menus.components import Button, NEON_PURPLE
+from client.ui_menus.components import (
+    Button,
+    ToggleSwitch,
+    NEON_PURPLE,
+    NEON_PURPLE_SWITCH,
+)
 
 
 @final
@@ -92,14 +97,26 @@ class PauseScene(Scene):
 
         w, h = self._screen.get_size()
         self._btn_resume = Button(
-            "Reprendre", NEON_PURPLE, 28, 12, 18, 10, on_click=self._resume
+            "Reprendre", NEON_PURPLE, 28, 12, 10, 18, on_click=self._resume
         )
         self._btn_quit = Button(
-            "Quitter", NEON_PURPLE, 28, 12, 18, 10, on_click=self._quit
+            "Quitter", NEON_PURPLE, 28, 12, 10, 18, on_click=self._quit
         )
+        self._font_label = pygame.font.SysFont("Arial", 18)
+        # Calcul de la position pour centrer "Son" + switch horizontalement
+        label_w, _ = self._font_label.size("Son")
+        gap, switch_w, switch_h = 10, 60, 28
+        total_w = label_w + gap + switch_w
+        self._son_label_x = w // 2 - total_w // 2  # bord gauche du label
+        self._switch_son = ToggleSwitch(NEON_PURPLE_SWITCH, switch_w, switch_h)
+        switch_cx = (
+            w // 2 - total_w // 2 + label_w + gap + switch_w // 2
+        )  # centre du switch
+        switch_y = h // 2 + 110 - switch_h // 2
 
         self._btn_resume.set_rect(w // 2, h // 2 - 30)
-        self._btn_quit.set_rect(w // 2, h // 2 + 30)
+        self._btn_quit.set_rect(w // 2, h // 2 + 35)
+        self._switch_son.set_rect(switch_cx, switch_y)
 
     def _resume(self) -> None:
         self._engine.sm.pop()
@@ -122,6 +139,17 @@ class PauseScene(Scene):
         for btn in (self._btn_resume, self._btn_quit):
             btn.update(dt, events)
             btn.draw(self._screen)
+
+        label = self._font_label.render("Son", True, pygame.Color(200, 184, 255))
+        self._screen.blit(
+            label,
+            (
+                self._son_label_x,
+                self._switch_son.rect.centery - label.get_height() // 2,
+            ),
+        )
+        self._switch_son.update(dt, events)
+        self._switch_son.draw(self._screen)
 
         return False
 
