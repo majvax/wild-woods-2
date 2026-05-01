@@ -1,35 +1,36 @@
-import pygame
-import noise
 import random
 
-COULEUR_EAU = (65, 105, 225)  # Bleu
-COULEUR_FORET = (34, 139, 34)  # Vert
-COULEUR_VILLE = (128, 128, 128)  # Gris
+import noise
+import pygame
 
-TAILLE_CASE = 10
+WATER_COLOR = (65, 105, 225)  # Bleu
+FOREST_COLOR = (34, 139, 34)  # Vert
+CITY_COLOR = (128, 128, 128)  # Gris
+
+TILE_SIZE = 10
 
 
-def generer_surface_fond(largeur: int, hauteur: int):
+def generate_background_surface(width: int, height: int):
 
-    surface = pygame.Surface((largeur, hauteur))
-    graine = random.randint(0, 1000)
-    echelle = 20.0
+    surface = pygame.Surface((width, height))
+    seed = random.randint(0, 1000)
+    scale = 20.0
 
-    colonnes = int(largeur / TAILLE_CASE)
-    lignes = int(hauteur / TAILLE_CASE)
+    columns = int(width / TILE_SIZE)
+    rows = int(height / TILE_SIZE)
 
-    for y in range(lignes):
-        for x in range(colonnes):
-            valeur_bruit = noise.pnoise2(x / echelle, y / echelle, base=graine)
+    for y in range(rows):
+        for x in range(columns):
+            noise_value = noise.pnoise2(x / scale, y / scale, base=seed)
 
-            if valeur_bruit < -0.5:
-                couleur = COULEUR_EAU
-            elif valeur_bruit < 0.2:
-                couleur = COULEUR_FORET
+            if noise_value < -0.5:
+                color = WATER_COLOR
+            elif noise_value < 0.2:
+                color = FOREST_COLOR
             else:
-                couleur = COULEUR_VILLE
+                color = CITY_COLOR
 
-            rect = (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE)
-            pygame.draw.rect(surface, couleur, rect)
+            rect = (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            pygame.draw.rect(surface, color, rect)
 
     return surface
