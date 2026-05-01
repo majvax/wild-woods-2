@@ -9,7 +9,7 @@ from client.factory import create_item
 
 
 @final
-class LootSystem(esper.Processor):
+class LootProc(esper.Processor):
     @override
     def process(self, dt: float):
         if not pygame.key.get_just_pressed()[pygame.K_l]:

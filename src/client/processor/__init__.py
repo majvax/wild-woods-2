@@ -1,9 +1,15 @@
+from .brain import BrainProc
+from .input import InputProc
+from .loot import LootProc
+from .movement import MovementProc
+from .render import RenderProc
+from .targeting import TargetingProc
+
 __all__ = [
     "BrainProc",
-    "LootSystem",
+    "InputProc",
+    "LootProc",
+    "MovementProc",
+    "RenderProc",
     "TargetingProc",
 ]
-
-from .brain import BrainProc
-from .loot import LootSystem
-from .targeting import TargetingProc
