@@ -20,8 +20,13 @@ from client.component import (
     Targeting,
     Velocity,
 )
-from client.main import InputSystem, MovementSystem
-from client.processor import BrainProc, LootSystem, TargetingProc
+from client.processor import (
+    BrainProc,
+    InputProc,
+    LootProc,
+    MovementProc,
+    TargetingProc,
+)
 
 
 @pytest.fixture
@@ -106,7 +111,7 @@ def test_brain_proc_patrol_applies_direction(esper_world, monkeypatch):
     assert vel.vy == pytest.approx(0.0)
 
 
-def test_loot_system_loot_one_spawns_item(esper_world, monkeypatch):
+def test_loot_proc_loot_one_spawns_item(esper_world, monkeypatch):
     pressed = [False] * 1024
     pressed[pygame.K_l] = True
     monkeypatch.setattr(pygame.key, "get_just_pressed", lambda: pressed)
@@ -124,12 +129,12 @@ def test_loot_system_loot_one_spawns_item(esper_world, monkeypatch):
         LootTable(LootTableKind.LOOT_ONE, [(ItemKind.GOLD, 1.0)]),
     )
 
-    LootSystem().process(0.016)
+    LootProc().process(0.016)
 
     assert created == [(Position(5, 6), ItemKind.GOLD)]
 
 
-def test_loot_system_key_not_pressed_does_nothing(esper_world, monkeypatch):
+def test_loot_proc_key_not_pressed_does_nothing(esper_world, monkeypatch):
     pressed = [False] * 1024
     monkeypatch.setattr(pygame.key, "get_just_pressed", lambda: pressed)
 
@@ -145,12 +150,12 @@ def test_loot_system_key_not_pressed_does_nothing(esper_world, monkeypatch):
         LootTable(LootTableKind.LOOT_ONE, [(ItemKind.GOLD, 1.0)]),
     )
 
-    LootSystem().process(0.016)
+    LootProc().process(0.016)
 
     assert created == []
 
 
-def test_loot_system_loot_one_empty_entries(esper_world, monkeypatch):
+def test_loot_proc_loot_one_empty_entries(esper_world, monkeypatch):
     pressed = [False] * 1024
     pressed[pygame.K_l] = True
     monkeypatch.setattr(pygame.key, "get_just_pressed", lambda: pressed)
@@ -167,12 +172,12 @@ def test_loot_system_loot_one_empty_entries(esper_world, monkeypatch):
         LootTable(LootTableKind.LOOT_ONE, []),
     )
 
-    LootSystem().process(0.016)
+    LootProc().process(0.016)
 
     assert created == []
 
 
-def test_loot_system_loot_many_spawns_items(esper_world, monkeypatch):
+def test_loot_proc_loot_many_spawns_items(esper_world, monkeypatch):
     pressed = [False] * 1024
     pressed[pygame.K_l] = True
     monkeypatch.setattr(pygame.key, "get_just_pressed", lambda: pressed)
@@ -193,7 +198,7 @@ def test_loot_system_loot_many_spawns_items(esper_world, monkeypatch):
         ),
     )
 
-    LootSystem().process(0.016)
+    LootProc().process(0.016)
 
     assert created == [
         (Position(1, 2), ItemKind.SYRINGE),
@@ -255,7 +260,7 @@ def test_brain_proc_chase_zero_distance(esper_world):
     assert vel.vy == 0.0
 
 
-def test_input_system_normalizes_diagonal(esper_world, monkeypatch):
+def test_input_proc_normalizes_diagonal(esper_world, monkeypatch):
     keys = [False] * 1024
     keys[pygame.K_z] = True
     keys[pygame.K_d] = True
@@ -263,7 +268,7 @@ def test_input_system_normalizes_diagonal(esper_world, monkeypatch):
 
     ent = esper.create_entity(Velocity(0, 0), Speed(100), PlayerTag())
 
-    InputSystem().process(0.016)
+    InputProc().process(0.016)
 
     vel = esper.component_for_entity(ent, Velocity)
     expected = 100 / math.sqrt(2)
@@ -271,10 +276,10 @@ def test_input_system_normalizes_diagonal(esper_world, monkeypatch):
     assert vel.vy == pytest.approx(-expected)
 
 
-def test_movement_system_updates_position(esper_world):
+def test_movement_proc_updates_position(esper_world):
     ent = esper.create_entity(Position(1, 2), Velocity(10, -5))
 
-    MovementSystem().process(0.5)
+    MovementProc().process(0.5)
 
     pos = esper.component_for_entity(ent, Position)
     assert pos.x == pytest.approx(6.0)
