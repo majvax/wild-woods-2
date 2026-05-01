@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pygame
 
-from client.core import Scene
+from client.scene import Scene
 
 
 class DummyScene(Scene):
@@ -53,7 +53,7 @@ def test_world_id_unique():
     assert a.id != b.id
 
 
-@patch("client.core.scene.esper")
+@patch("client.scene.scene.esper")
 def test_process_switches_world_and_delegates(mock: MagicMock):
     scene = DummyScene()
     mock.reset_mock()

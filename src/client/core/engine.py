@@ -4,8 +4,9 @@ from typing import final
 import esper
 import pygame
 
+from client.scene import SceneManager
+
 from .event import EngineEvent
-from .scene import SceneManager
 
 
 class StopCode(IntEnum):
@@ -55,4 +56,5 @@ class Engine:
             self._scene_manger.process(dt, events)
             pygame.display.flip()
 
+        pygame.quit()
         return self._stop_code
