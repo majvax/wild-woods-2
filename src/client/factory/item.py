@@ -1,9 +1,7 @@
 import esper
 import pygame
 
-from client.component.gameplay import Sprite
-from client.component.loot import ItemKind, ItemTag
-from client.component.physics import Position
+from client.component import ItemKind, ItemTag, Position, Sprite
 
 _ITEM_COLORS: dict[ItemKind, str] = {
     ItemKind.SYRINGE: "#00e5ff",

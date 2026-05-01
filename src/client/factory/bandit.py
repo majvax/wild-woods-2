@@ -1,12 +1,20 @@
 import esper
 import pygame
 
-from client.component.ai import AI, PatrolRuntime, PatrolSettings
-from client.component.gameplay import Sprite
-from client.component.loot import ItemKind, LootTable, LootTableKind
-from client.component.physics import Position, Speed, Velocity
-from client.component.tags import EnemyTag
-from client.component.targeting import Targeting
+from client.component import (
+    AI,
+    EnemyTag,
+    ItemKind,
+    LootTable,
+    LootTableKind,
+    PatrolRuntime,
+    PatrolSettings,
+    Position,
+    Speed,
+    Sprite,
+    Targeting,
+    Velocity,
+)
 
 
 def create_bandit(pos: Position):

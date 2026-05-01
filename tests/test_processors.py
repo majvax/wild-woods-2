@@ -5,15 +5,23 @@ import esper
 import pygame
 import pytest
 
-from client.component.ai import AI, AIState, PatrolRuntime, PatrolSettings
-from client.component.loot import ItemKind, LootTable, LootTableKind
-from client.component.physics import Position, Speed, Velocity
-from client.component.tags import EnemyTag, PlayerTag
-from client.component.targeting import Targeting
+from client.component import (
+    AI,
+    AIState,
+    EnemyTag,
+    ItemKind,
+    LootTable,
+    LootTableKind,
+    PatrolRuntime,
+    PatrolSettings,
+    PlayerTag,
+    Position,
+    Speed,
+    Targeting,
+    Velocity,
+)
 from client.main import InputSystem, MovementSystem
-from client.processor.brain import BrainProc
-from client.processor.loot import LootSystem
-from client.processor.targeting import TargetingProc
+from client.processor import BrainProc, LootSystem, TargetingProc
 
 
 @pytest.fixture

@@ -3,9 +3,7 @@ from typing import final, override
 
 import esper
 
-from client.component.physics import Position
-from client.component.tags import EnemyTag, PlayerTag
-from client.component.targeting import Targeting
+from client.component import EnemyTag, PlayerTag, Position, Targeting
 
 
 @final

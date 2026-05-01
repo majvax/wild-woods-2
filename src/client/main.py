@@ -5,21 +5,11 @@ import esper
 import pygame
 from esper import Processor
 
-from client.component.gameplay import Sprite
-from client.component.physics import Position, Speed, Velocity
-from client.component.tags import PlayerTag
-from client.core.engine import Engine
-from client.core.map_generator import generate_background_surface
-from client.core.scene import Scene
-from client.factory.bandit import create_bandit
-from client.factory.player import create_player
+from client.component import PlayerTag, Position, Speed, Sprite, Velocity
+from client.core import Engine, Scene, generate_background_surface
+from client.factory import create_bandit, create_player
 from client.processor import BrainProc, LootSystem, TargetingProc
-from client.ui.components import (
-    NEON_PURPLE,
-    NEON_PURPLE_SWITCH,
-    Button,
-    ToggleSwitch,
-)
+from client.ui import NEON_PURPLE, NEON_PURPLE_SWITCH, Button, ToggleSwitch
 
 
 @final

@@ -3,7 +3,7 @@ from typing import final, override
 import pygame
 import pytest
 
-from client.core.scene import Scene, SceneManager
+from client.core import Scene, SceneManager
 
 
 class DummyScene(Scene):
