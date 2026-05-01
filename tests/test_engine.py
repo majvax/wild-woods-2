@@ -1,7 +1,8 @@
 import esper
 import pygame
 
-from client.core import Engine, EngineEvent, SceneManager, StopCode
+from client.core import Engine, EngineEvent, StopCode
+from client.scene import SceneManager
 
 
 def test_engine_stop_sets_code(monkeypatch):

@@ -8,14 +8,11 @@ from .map_generator import (
     WATER_COLOR,
     generate_background_surface,
 )
-from .scene import Scene, SceneManager
 
 __all__ = [
     "Engine",
     "StopCode",
     "EngineEvent",
-    "Scene",
-    "SceneManager",
     "generate_background_surface",
     "WATER_COLOR",
     "FOREST_COLOR",
