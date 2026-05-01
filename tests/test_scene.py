@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pygame
 
-from client.core.scene import Scene
+from client.core import Scene
 
 
 class DummyScene(Scene):

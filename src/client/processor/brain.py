@@ -4,9 +4,16 @@ from typing import final, override
 
 import esper
 
-from client.component.ai import AI, AIState, PatrolRuntime, PatrolSettings
-from client.component.physics import Position, Speed, Velocity
-from client.component.targeting import Targeting
+from client.component import (
+    AI,
+    AIState,
+    PatrolRuntime,
+    PatrolSettings,
+    Position,
+    Speed,
+    Targeting,
+    Velocity,
+)
 
 
 @final

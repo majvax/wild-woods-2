@@ -4,9 +4,8 @@ from typing import final, override
 import esper
 import pygame
 
-from client.component.loot import LootTable, LootTableKind
-from client.component.physics import Position
-from client.factory.item import create_item
+from client.component import LootTable, LootTableKind, Position
+from client.factory import create_item
 
 
 @final

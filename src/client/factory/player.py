@@ -1,9 +1,7 @@
 import esper
 import pygame
 
-from client.component.gameplay import Sprite
-from client.component.physics import Position, Speed, Velocity
-from client.component.tags import PlayerTag
+from client.component import PlayerTag, Position, Speed, Sprite, Velocity
 
 
 def create_player(pos: Position):

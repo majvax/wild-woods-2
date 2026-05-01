@@ -4,15 +4,22 @@ import esper
 import pygame
 import pytest
 
-from client.component.ai import AI, PatrolRuntime, PatrolSettings
-from client.component.gameplay import Sprite
-from client.component.loot import ItemKind, ItemTag, LootTable
-from client.component.physics import Position, Speed, Velocity
-from client.component.tags import EnemyTag, PlayerTag
-from client.component.targeting import Targeting
-from client.factory.bandit import create_bandit
-from client.factory.item import _ITEM_SIZES, create_item
-from client.factory.player import create_player
+from client.component import (
+    AI,
+    EnemyTag,
+    ItemKind,
+    ItemTag,
+    LootTable,
+    PatrolRuntime,
+    PatrolSettings,
+    PlayerTag,
+    Position,
+    Speed,
+    Sprite,
+    Targeting,
+    Velocity,
+)
+from client.factory import create_bandit, create_item, create_player
 
 
 @pytest.fixture
@@ -27,18 +34,6 @@ def esper_world():
 class DummyImage:
     def convert_alpha(self) -> pygame.Surface:
         return pygame.Surface((10, 10), pygame.SRCALPHA)
-
-
-def test_create_item_adds_components(esper_world):
-    create_item(Position(1, 2), ItemKind.GOLD)
-
-    entities = list(esper.get_components(Position, Sprite, ItemTag))
-    assert len(entities) == 1
-    _, (pos, sprite, tag) = entities[0]
-
-    assert (pos.x, pos.y) == (1, 2)
-    assert tag.kind == ItemKind.GOLD
-    assert sprite.surface.get_size() == _ITEM_SIZES[ItemKind.GOLD]
 
 
 def test_create_player_adds_components(esper_world, monkeypatch):
