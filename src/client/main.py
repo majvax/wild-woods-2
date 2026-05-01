@@ -9,12 +9,12 @@ from client.component.gameplay import Sprite
 from client.component.physics import Position, Speed, Velocity
 from client.component.tags import PlayerTag
 from client.core.engine import Engine
-from client.core.map_generator import generer_surface_fond
+from client.core.map_generator import generate_background_surface
 from client.core.scene import Scene
 from client.factory.bandit import create_bandit
 from client.factory.player import create_player
 from client.processor import BrainProc, LootSystem, TargetingProc
-from client.ui_menus.components import (
+from client.ui.components import (
     NEON_PURPLE,
     NEON_PURPLE_SWITCH,
     Button,
@@ -60,7 +60,7 @@ class RenderSystem(Processor):
         self.screen = screen
         self.font = pygame.font.SysFont("Arial", 18)
         largeur, hauteur = self.screen.get_size()
-        self._background = generer_surface_fond(largeur, hauteur)
+        self._background = generate_background_surface(largeur, hauteur)
 
     @override
     def process(self, dt: float):
@@ -105,8 +105,8 @@ class PauseScene(Scene):
         label_w, _ = self._font_label.size("Son")
         gap, switch_w, switch_h = 10, 60, 28
         total_w = label_w + gap + switch_w
-        self._son_label_x = w // 2 - total_w // 2  # bord gauche du label
-        self._switch_son = ToggleSwitch(NEON_PURPLE_SWITCH, switch_w, switch_h)
+        self._sound_label_x = w // 2 - total_w // 2  # bord gauche du label
+        self._sound_switch = ToggleSwitch(NEON_PURPLE_SWITCH, switch_w, switch_h)
         switch_cx = (
             w // 2 - total_w // 2 + label_w + gap + switch_w // 2
         )  # centre du switch
@@ -114,7 +114,7 @@ class PauseScene(Scene):
 
         self._btn_resume.set_rect(w // 2, h // 2 - 30)
         self._btn_quit.set_rect(w // 2, h // 2 + 35)
-        self._switch_son.set_rect(switch_cx, switch_y)
+        self._sound_switch.set_rect(switch_cx, switch_y)
 
     def _resume(self) -> None:
         self._engine.sm.pop()
@@ -141,12 +141,12 @@ class PauseScene(Scene):
         self._screen.blit(
             label,
             (
-                self._son_label_x,
-                self._switch_son.rect.centery - label.get_height() // 2,
+                self._sound_label_x,
+                self._sound_switch.rect.centery - label.get_height() // 2,
             ),
         )
-        self._switch_son.update(dt, events)
-        self._switch_son.draw(self._screen)
+        self._sound_switch.update(dt, events)
+        self._sound_switch.draw(self._screen)
 
         return False
 

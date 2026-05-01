@@ -1,13 +1,13 @@
 import pygame
 import pytest
 
-from client.ui_menus.components import (
+from client.ui.components import (
     NEON_PURPLE,
     NEON_PURPLE_SWITCH,
     Button,
     ToggleSwitch,
 )
-from client.ui_menus.helper import lerp_color
+from client.ui.helper import lerp_color
 
 
 @pytest.fixture(scope="module", autouse=True)
