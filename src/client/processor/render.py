@@ -30,7 +30,7 @@ class RenderProc(Processor):
                 ),
             )
         fps = int(1.0 / dt) if dt > 0 else 0
-        num_ent = len(list(esper.get_entities()))
+        num_ent = sum(1 for _ in esper.get_entities())
         fps_text = self.font.render(
             f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES",
             True,
