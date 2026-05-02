@@ -4,8 +4,9 @@ from typing import final
 import esper
 import pygame
 
-from client.core.event import EngineEvent
-from client.core.scene import SceneManager
+from client.scene import SceneManager
+
+from .event import EngineEvent
 
 
 class StopCode(IntEnum):

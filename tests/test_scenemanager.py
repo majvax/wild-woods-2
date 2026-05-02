@@ -1,10 +1,9 @@
-from typing import override
-from unittest.mock import MagicMock, call, patch
+from typing import final, override
 
-import pytest
 import pygame
+import pytest
 
-from client.core.scene import Scene, SceneManager
+from client.scene import Scene, SceneManager
 
 
 class DummyScene(Scene):
@@ -31,6 +30,7 @@ class DummyScene(Scene):
         self.exited = True
 
 
+@final
 class ArgScene(Scene):
     """Scene that accepts extra constructor arguments."""
 
