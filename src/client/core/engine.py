@@ -56,5 +56,4 @@ class Engine:
             self._scene_manger.process(dt, events)
             pygame.display.flip()
 
-        pygame.quit()
         return self._stop_code
