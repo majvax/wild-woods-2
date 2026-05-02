@@ -15,6 +15,8 @@ from client.factory.player import create_player
 from client.processor import BrainProc, TargetingProc
 
 from client.core.map_generator import generer_surface_fond
+from client.processor.DamageSystem import DamageProc
+from client.component.damage import Health
 
 
 @final
@@ -69,10 +71,11 @@ class RenderSystem(Processor):
                     pos.y - sprite.surface.get_height() / 2,
                 ),
             )
+        _, (_, php) = esper.get_components(PlayerTag, Health)[0]
         fps = int(1.0 / dt) if dt > 0 else 0
         num_ent = len(list(esper.get_entities()))
         fps_text = self.font.render(
-            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES",
+            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES | {php.current}PV",
             True,
             pygame.Color("black"),
         )
@@ -106,7 +109,7 @@ class PauseScene(Scene):
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):  # type: ignore[reportAny]
                     self._engine.sm.pop()
 
         # Dessine l'overlay noir par-dessus le frame précédent
@@ -145,15 +148,16 @@ class GameScene(Scene):
         esper.add_processor(BrainProc())
         esper.add_processor(MovementSystem())
         esper.add_processor(RenderSystem(self._screen))
+        esper.add_processor(DamageProc())
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
-        create_bandit(Position(0, 0))
+        create_bandit(Position(400, 400))
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):  # type: ignore[reportAny]
                     self._engine.sm.push(PauseScene, self._engine)
                     return True
 
