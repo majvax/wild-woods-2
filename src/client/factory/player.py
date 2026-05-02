@@ -6,7 +6,6 @@ from client.component.damage import Health, Invincibility
 from client.component import PlayerTag, Position, Speed, Sprite, Velocity
 
 
-
 def create_player(pos: Position):
     surface = pygame.image.load(
         "sprite/player/standard/idle/left/1.png"
