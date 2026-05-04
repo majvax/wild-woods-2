@@ -6,6 +6,8 @@ from esper import Processor
 
 from client.component import Position, Sprite
 from client.core import generate_background_surface
+from client.component.damage import Health
+from client.component.tags import PlayerTag
 
 
 @final
@@ -29,10 +31,11 @@ class RenderProc(Processor):
                     pos.y - sprite.surface.get_height() / 2,
                 ),
             )
+        _, (_, php) = esper.get_components(PlayerTag, Health)[0]
         fps = int(1.0 / dt) if dt > 0 else 0
         num_ent = sum(1 for _ in esper.get_entities())
         fps_text = self.font.render(
-            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES",
+            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES | {php.current}PV",
             True,
             pygame.Color("black"),
         )
