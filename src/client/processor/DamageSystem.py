@@ -30,3 +30,4 @@ class DamageProc(esper.Processor):
             if distance < 50:
                 php.current -= 1
                 pinv.time = 1
+                break
