@@ -11,14 +11,14 @@ from client.processor import (
     InputProc,
     LootProc,
     MovementProc,
+    PickupProc,
     RenderProc,
     TargetingProc,
 )
+from client.processor.DamageSystem import DamageProc
 
 from .pause import PauseScene
 from .scene import Scene
-
-from client.processor.DamageSystem import DamageProc
 
 
 @final
@@ -40,6 +40,7 @@ class GameScene(Scene):
         esper.add_processor(LootProc())
         esper.add_processor(MovementProc())
         esper.add_processor(DamageProc())
+        esper.add_processor(PickupProc())
         esper.add_processor(RenderProc(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
