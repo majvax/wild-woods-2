@@ -15,7 +15,7 @@ from client.processor import (
     RenderProc,
     TargetingProc,
 )
-from client.processor.DamageSystem import DamageProc
+from client.processor.damage import DamageProc
 
 from .pause import PauseScene
 from .scene import Scene

@@ -1,4 +1,5 @@
 from .ai import AI, AIState, PatrolRuntime, PatrolSettings
+from .damage import DamageDealer, Health, Invincibility
 from .gameplay import Sprite
 from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
 from .physics import Orientation, Position, Speed, Velocity
@@ -23,4 +24,7 @@ __all__ = [
     "EnemyTag",
     "PlayerTag",
     "Targeting",
+    "Health",
+    "DamageDealer",
+    "Invincibility",
 ]
