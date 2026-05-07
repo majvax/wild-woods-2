@@ -1,11 +1,9 @@
-import esper
-from typing import final, override
-from client.component.tags import PlayerTag
-from client.component.tags import EnemyTag
-from client.component.physics import Position
-from client.component.damage import Health
-from client.component.damage import Invincibility
 import math
+from typing import final, override
+
+import esper
+
+from client.component import EnemyTag, Health, Invincibility, PlayerTag, Position
 
 
 @final
