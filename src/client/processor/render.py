@@ -4,7 +4,7 @@ import esper
 import pygame
 from esper import Processor
 
-from client.component import Position, Sprite
+from client.component import Inventory, ItemKind, PlayerTag, Position, Sprite
 from client.core import generate_background_surface
 from client.component.damage import Health
 from client.component.tags import PlayerTag
@@ -40,3 +40,16 @@ class RenderProc(Processor):
             pygame.Color("black"),
         )
         self.screen.blit(fps_text, (10, 10))
+
+        line_h = self.font.get_linesize()
+        inv_start_y = 10 + line_h + 6
+        for _, (inventory, _) in esper.get_components(Inventory, PlayerTag):
+            header = self.font.render("Inventory", True, pygame.Color("black"))
+            self.screen.blit(header, (10, inv_start_y))
+            y = inv_start_y + line_h
+            for kind in ItemKind:
+                label = f"{kind.name.title()}: {inventory.count(kind)}"
+                item_text = self.font.render(label, True, pygame.Color("black"))
+                self.screen.blit(item_text, (10, y))
+                y += line_h
+            break

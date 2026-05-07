@@ -22,3 +22,14 @@ class LootTable:
 @dataclass(frozen=True, slots=True)
 class ItemTag:
     kind: ItemKind
+
+
+@dataclass
+class Inventory:
+    counts: dict[ItemKind, int] = field(default_factory=dict)
+
+    def add(self, kind: ItemKind, amount: int = 1) -> None:
+        self.counts[kind] = self.counts.get(kind, 0) + amount
+
+    def count(self, kind: ItemKind) -> int:
+        return self.counts.get(kind, 0)

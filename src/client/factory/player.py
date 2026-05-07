@@ -1,9 +1,8 @@
 import esper
 import pygame
 
-
+from client.component import Inventory, PlayerTag, Position, Speed, Sprite, Velocity
 from client.component.damage import Health, Invincibility
-from client.component import PlayerTag, Position, Speed, Sprite, Velocity
 
 
 def create_player(pos: Position):
@@ -18,4 +17,5 @@ def create_player(pos: Position):
         PlayerTag(),
         Health(5, 5),
         Invincibility(0),
+        Inventory(),
     )
