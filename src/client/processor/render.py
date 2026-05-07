@@ -5,9 +5,8 @@ import pygame
 from esper import Processor
 
 from client.component import Inventory, ItemKind, PlayerTag, Position, Sprite
-from client.core import generate_background_surface
 from client.component.damage import Health
-from client.component.tags import PlayerTag
+from client.core import generate_background_surface
 
 
 @final
