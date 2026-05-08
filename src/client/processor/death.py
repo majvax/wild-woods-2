@@ -1,9 +1,7 @@
 import esper
 import pygame
 from typing import final, override
-from client.component import Health, PlayerTag
-from client.factory.player import Speed, Sprite
-from client.scene import GameOver
+from client.component import Health, PlayerTag, Speed, Sprite
 from client.core import Engine
 
 
@@ -13,25 +11,31 @@ class DeathProc(esper.Processor):
         super().__init__()
         self._engine = engine
 
-        self.death_timer = 3
-        self.is_dead = False
-        self.dead_image = pygame.image.load("sprite/player/standard/hurt/up/6.png").convert_alpha
+        self.death_timer = 2.0
+        self._game_over_signaled = False
 
+        self.dead_image = pygame.image.load(
+            "sprite/player/standard/hurt/up/6.png"
+        ).convert_alpha()
 
     @override
     def process(self, dt: float):
+        if self._game_over_signaled:
+            return
         player = esper.get_components(PlayerTag, Health, Speed, Sprite)
         if not player:
             return
-        ent, (_, php, pspeed, psprite) = player[0]
+        _, (_, php, pspeed, psprite) = player[0]
 
         if php.current <= 0:
-            self.is_dead = True
+            php.current = 0
             pspeed.value = 0
             psprite.surface = self.dead_image
-        
-        self.death_timer -= dt
 
-        if self.death_timer <= 0:
-            self._engine.sm.push(GameOver, self._engine)
+            self.death_timer -= dt
 
+            if self.death_timer <= 0:
+                pygame.event.post(
+                    pygame.event.Event(pygame.USEREVENT, {"action": "game_over"})
+                )
+                self._game_over_signaled = True
