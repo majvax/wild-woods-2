@@ -16,7 +16,7 @@ from client.processor import (
     TargetingProc,
 )
 from client.processor.damage import DamageProc
-
+from client.processor.death import DeathProc
 from .pause import PauseScene
 from .scene import Scene
 
@@ -41,6 +41,7 @@ class GameScene(Scene):
         esper.add_processor(MovementProc())
         esper.add_processor(DamageProc())
         esper.add_processor(PickupProc())
+        esper.add_processor(DeathProc(self._engine))
         esper.add_processor(RenderProc(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
@@ -53,6 +54,15 @@ class GameScene(Scene):
                 if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
                     self._engine.sm.push(PauseScene, self._engine)
                     return True
+
+            if (
+                event.type == pygame.USEREVENT
+                and event.dict.get("action") == "game_over"
+            ):
+                from client.scene.GameOver import GameOverScene
+
+                self._engine.sm.push(GameOverScene, self._engine, self.__class__)
+                return False
 
         # Spawn bandits every 5 seconds
         # self._timer += dt
