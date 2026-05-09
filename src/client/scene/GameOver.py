@@ -18,7 +18,7 @@ class GameOverScene(Scene):
         self._game_scene_cls = game_scene_cls
 
         self._font_subtitle = pygame.font.SysFont("Arial", 24, italic=True)
-        self._font_title = pygame.font.SysFont("Arial", 150, bold=True)
+        self._font_title = pygame.font.Font("police/Eater/Eater-Regular.ttf", 150)
 
         w, h = self._screen.get_size()
         self._btn_quit = Button(
