@@ -1,11 +1,14 @@
+from typing import Callable, ClassVar, cast, final
+
 import pygame
-from typing import Callable, cast, final
 
 from .helper import lerp_color
 
 
 @final
 class Button:
+    _hover_sound: ClassVar[pygame.mixer.Sound | None] = None
+
     def __init__(
         # var avec arguments par défaut à mettre à la fin
         self,
@@ -32,6 +35,20 @@ class Button:
         # t = 0 : état normal, t = 1 : état pleinement hover/pressé
         self._hover_t: float = 0.0
         self._press_t: float = 0.0
+        self._was_hovered: bool = False
+
+    @classmethod
+    def _get_hover_sound(cls) -> pygame.mixer.Sound | None:
+        if cls._hover_sound is not None:
+            return cls._hover_sound
+
+        try:
+            if pygame.mixer.get_init() is None:
+                pygame.mixer.init()
+            cls._hover_sound = pygame.mixer.Sound("assets/sound/hover.wav")
+        except pygame.error:
+            cls._hover_sound = None
+        return cls._hover_sound
 
     def set_rect(self, cx: int, y: int) -> None:
         """Place le bouton centré horizontalement sur cx, bord supérieur à y."""
@@ -43,9 +60,15 @@ class Button:
         if not self.enabled:
             self._hover_t = 0.0
             self._press_t = 0.0
+            self._was_hovered = False
             return
 
         hovered = self.rect.collidepoint(pygame.mouse.get_pos())
+        if hovered and not self._was_hovered:
+            sound = self._get_hover_sound()
+            if sound is not None:
+                sound.play()
+        self._was_hovered = hovered
         speed = 8.0
 
         # Transition smooth vers 1 si survolé, vers 0 sinon
