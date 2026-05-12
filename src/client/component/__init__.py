@@ -3,7 +3,7 @@ from .damage import DamageDealer, Health, Invincibility
 from .gameplay import Sprite
 from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
 from .physics import Orientation, Position, Speed, Velocity
-from .tags import EnemyTag, PlayerTag
+from .tags import EnemyTag, PlayerTag, ProjectileTag
 from .targeting import Targeting
 
 __all__ = [
@@ -23,6 +23,7 @@ __all__ = [
     "Velocity",
     "EnemyTag",
     "PlayerTag",
+    "ProjectileTag"
     "Targeting",
     "Health",
     "DamageDealer",
