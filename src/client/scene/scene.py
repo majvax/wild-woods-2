@@ -1,10 +1,9 @@
 import uuid
 from abc import ABC, abstractmethod
 from typing import final
-import pygame
-
 
 import esper
+import pygame
 
 
 class Scene(ABC):
@@ -77,3 +76,7 @@ class SceneManager:
             esper.switch_world(scene.id)
             if not scene.process(dt, events):
                 break
+
+    def clear(self) -> None:
+        while not self.empty:
+            self.pop()

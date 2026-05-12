@@ -19,7 +19,6 @@ class RenderProc(Processor):
 
     @override
     def process(self, dt: float):
-        self.screen.fill("white")
         self.screen.blit(self._background)
         for _, (pos, sprite) in esper.get_components(Position, Sprite):
             self.screen.blit(
