@@ -1,15 +1,16 @@
+from typing import Callable, final, override
+
 import esper
 import pygame
-from typing import final, override
+
 from client.component import Health, PlayerTag, Speed, Sprite
-from client.core import Engine
 
 
 @final
 class DeathProc(esper.Processor):
-    def __init__(self, engine: Engine):
+    def __init__(self, on_game_over: Callable[[], None]):
         super().__init__()
-        self._engine = engine
+        self._on_game_over = on_game_over
 
         self.death_timer = 2.0
         self._game_over_signaled = False
@@ -35,7 +36,5 @@ class DeathProc(esper.Processor):
             self.death_timer -= dt
 
             if self.death_timer <= 0:
-                pygame.event.post(
-                    pygame.event.Event(pygame.USEREVENT, {"action": "game_over"})
-                )
+                self._on_game_over()
                 self._game_over_signaled = True
