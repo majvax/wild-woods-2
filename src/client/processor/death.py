@@ -3,7 +3,7 @@ from typing import Callable, final, override
 import esper
 import pygame
 
-from client.component import Health, PlayerTag, Speed, Sprite, EnemyTag, Weapon
+from client.component import EnemyTag, Health, PlayerTag, Speed, Sprite, Weapon
 
 
 @final
@@ -42,7 +42,11 @@ class DeathProc(esper.Processor):
                 self._on_game_over()
                 self._game_over_signaled = True
 
+        dead_enemies: list[int] = []
         for e_ent, (_, ehp, _) in esper.get_components(EnemyTag, Health, Sprite):
             if ehp.current <= 0:
                 ehp.current = 0
-                esper.delete_entity(e_ent)
+                dead_enemies.append(e_ent)
+
+        for e_ent in dead_enemies:
+            esper.delete_entity(e_ent)
