@@ -3,7 +3,9 @@ import pygame
 
 from client.component import (
     AI,
+    DamageDealer,
     EnemyTag,
+    Health,
     ItemKind,
     LootTable,
     LootTableKind,
@@ -14,7 +16,6 @@ from client.component import (
     Sprite,
     Targeting,
     Velocity,
-    Health,
 )
 
 
@@ -32,6 +33,7 @@ def create_bandit(pos: Position):
         Velocity(0, 0),
         Speed(200),
         Health(20, 20),
+        DamageDealer(amount=1.0),
         Sprite(surface),
         EnemyTag(),
         AI(),
