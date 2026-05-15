@@ -6,6 +6,8 @@ from .movement import MovementProc
 from .pickup import PickupProc
 from .render import RenderProc
 from .targeting import TargetingProc
+from .shooting import ShootingProc
+from .lifetime import LifetimeProc
 
 __all__ = [
     "BrainProc",
@@ -16,4 +18,6 @@ __all__ = [
     "PickupProc",
     "RenderProc",
     "TargetingProc",
+    "ShootingProc",
+    "LifetimeProc",
 ]
