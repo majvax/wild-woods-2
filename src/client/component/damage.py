@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class Health:
-    max: int
-    current: int
+    max: float
+    current: float
 
 
 @dataclass

@@ -2,6 +2,7 @@ from typing import cast, final, override
 
 import esper
 import pygame
+import random
 
 from client.component import Position
 from client.core import Engine
@@ -14,6 +15,8 @@ from client.processor import (
     PickupProc,
     RenderProc,
     TargetingProc,
+    ShootingProc,
+    LifetimeProc,
 )
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
@@ -45,6 +48,8 @@ class GameScene(Scene):
         esper.add_processor(DamageProc())
         esper.add_processor(PickupProc())
         esper.add_processor(DeathProc(self._on_game_over))
+        esper.add_processor(ShootingProc())
+        esper.add_processor(LifetimeProc())
         esper.add_processor(RenderProc(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
@@ -62,16 +67,16 @@ class GameScene(Scene):
                     return True
 
         # Spawn bandits every 5 seconds
-        # self._timer += dt
-        # if self._timer > 0.1:
-        #     pos = Position(
-        #         self._screen.get_width() * 0.1
-        #         + self._screen.get_width() * 0.8 * random.random(),
-        #         self._screen.get_height() * 0.1
-        #         + self._screen.get_height() * 0.8 * random.random(),
-        #     )
-        #     create_bandit(pos)
-        #     self._timer = 0
+        self._timer += dt
+        if self._timer > 4:
+            pos = Position(
+                self._screen.get_width() * 0.1
+                + self._screen.get_width() * 0.8 * random.random(),
+                self._screen.get_height() * 0.1
+                + self._screen.get_height() * 0.8 * random.random(),
+            )
+            create_bandit(pos)
+            self._timer = 0
 
         esper.process(dt)
 
