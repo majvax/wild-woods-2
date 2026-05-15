@@ -3,7 +3,15 @@ from typing import final, override
 
 import esper
 
-from client.component import EnemyTag, Health, Invincibility, PlayerTag, Position
+from client.component import (
+    EnemyTag,
+    Health,
+    Invincibility,
+    PlayerTag,
+    Position,
+    ProjectileTag,
+    Weapon,
+)
 
 
 @final
@@ -14,18 +22,28 @@ class DamageProc(esper.Processor):
         player_query = esper.get_components(PlayerTag, Position, Health, Invincibility)
         if not player_query:
             return
-        _, (_, ppos, php, pinv) = player_query[0]
+        p_ent, (_, ppos, php, pinv) = player_query[0]
+
+        pweap = esper.component_for_entity(p_ent, Weapon)
 
         pinv.time -= dt
-        if pinv.time > 0:
-            return
+        if pinv.time <= 0:
+            for _, (_, epos) in esper.get_components(EnemyTag, Position):
+                dx = ppos.x - epos.x
+                dy = ppos.y - epos.y
+                distance = math.hypot(dx, dy)
 
-        for _, (_, epos) in esper.get_components(EnemyTag, Position):
-            dx = ppos.x - epos.x
-            dy = ppos.y - epos.y
-            distance = math.hypot(dx, dy)
+                if distance < 50:
+                    php.current -= 1
+                    pinv.time = 1
+                    break
+        for b_ent, (_, bpos) in esper.get_components(ProjectileTag, Position):
+            for _, (_, epos, ehp) in esper.get_components(EnemyTag, Position, Health):
+                dx = bpos.x - epos.x
+                dy = bpos.y - epos.y
+                distance = math.hypot(dx, dy)
 
-            if distance < 50:
-                php.current -= 1
-                pinv.time = 1
-                break
+                if distance < 25:
+                    ehp.current -= pweap.damage
+                    esper.delete_entity(b_ent)
+                    break

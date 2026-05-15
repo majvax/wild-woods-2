@@ -3,7 +3,7 @@ from typing import Callable, final, override
 import esper
 import pygame
 
-from client.component import Health, PlayerTag, Speed, Sprite
+from client.component import Health, PlayerTag, Speed, Sprite, EnemyTag, Weapon
 
 
 @final
@@ -26,11 +26,14 @@ class DeathProc(esper.Processor):
         player = esper.get_components(PlayerTag, Health, Speed, Sprite)
         if not player:
             return
-        _, (_, php, pspeed, psprite) = player[0]
+        p_ent, (_, php, pspeed, psprite) = player[0]
+        pweap = esper.component_for_entity(p_ent, Weapon)
 
         if php.current <= 0:
             php.current = 0
             pspeed.value = 0
+            pweap.cooldown_current = 3
+
             psprite.surface = self.dead_image
 
             self.death_timer -= dt
@@ -38,3 +41,8 @@ class DeathProc(esper.Processor):
             if self.death_timer <= 0:
                 self._on_game_over()
                 self._game_over_signaled = True
+
+        for e_ent, (_, ehp, _) in esper.get_components(EnemyTag, Health, Sprite):
+            if ehp.current <= 0:
+                ehp.current = 0
+                esper.delete_entity(e_ent)

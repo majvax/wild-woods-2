@@ -14,6 +14,7 @@ from client.component import (
     Sprite,
     Targeting,
     Velocity,
+    Health,
 )
 
 
@@ -30,6 +31,7 @@ def create_bandit(pos: Position):
         pos,
         Velocity(0, 0),
         Speed(200),
+        Health(20, 20),
         Sprite(surface),
         EnemyTag(),
         AI(),
