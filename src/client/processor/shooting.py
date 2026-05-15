@@ -1,8 +1,10 @@
-import esper
-import pygame
 import math
 from typing import final, override
-from client.component import Weapon, PlayerTag, Position, Velocity
+
+import esper
+import pygame
+
+from client.component import PlayerTag, Position, Velocity, Weapon
 from client.factory.projectile import create_projectile
 
 
@@ -26,6 +28,6 @@ class ShootingProc(esper.Processor):
                 vel_x = math.cos(angle) * weapon.bullet_speed
                 vel_y = math.sin(angle) * weapon.bullet_speed
 
-                create_projectile(ppos, Velocity(vel_x, vel_y))
+                create_projectile(ppos, Velocity(vel_x, vel_y), weapon.damage)
 
                 weapon.cooldown_current = weapon.cooldown_max
