@@ -57,12 +57,8 @@ class GameScene(Scene):
 
         esper.add_processor(RenderProc(self._screen, self._engine))
 
-<<<<<<< HEAD
         chunk_world_size = CHUNK_SIZE_TILES * TILE_SIZE
         create_player(Position(chunk_world_size / 2, chunk_world_size / 2))
-=======
-        create_player(Position(0, 0))
->>>>>>> 78cbf61 (feat: centered camera and added infinite map with caching to not hurt fps. Need)
         self._spawn_bandit_near_player()
 
     def _get_player_position(self) -> Position:
