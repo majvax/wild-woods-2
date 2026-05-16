@@ -8,6 +8,7 @@ from .render import RenderProc
 from .targeting import TargetingProc
 from .shooting import ShootingProc
 from .lifetime import LifetimeProc
+from .hitbox import HitboxProc
 
 __all__ = [
     "BrainProc",
@@ -20,4 +21,5 @@ __all__ = [
     "TargetingProc",
     "ShootingProc",
     "LifetimeProc",
+    "HitboxProc",
 ]

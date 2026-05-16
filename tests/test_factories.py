@@ -76,7 +76,6 @@ def test_create_bandit_adds_components(esper_world, monkeypatch):
     assert isinstance(sprite, Sprite)
     assert isinstance(ai, AI)
     assert targeting.range == 200
-    assert targeting.atk_range == 50
     assert isinstance(settings, PatrolSettings)
     assert isinstance(runtime, PatrolRuntime)
     assert len(loot.entries) == 3

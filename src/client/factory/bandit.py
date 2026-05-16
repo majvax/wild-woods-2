@@ -16,6 +16,7 @@ from client.component import (
     Sprite,
     Targeting,
     Velocity,
+    Hitbox,
 )
 
 
@@ -28,6 +29,10 @@ def create_bandit(pos: Position):
         (ItemKind.GOLD, 0.2),
     ]
 
+    true_rect = surface.get_bounding_rect()
+    offset_x = (true_rect.x + true_rect.width / 2) - surface.get_width() / 2
+    offset_y = (true_rect.y + true_rect.height / 2) - surface.get_height() / 2
+
     esper.create_entity(
         pos,
         Velocity(0, 0),
@@ -35,9 +40,15 @@ def create_bandit(pos: Position):
         Health(20, 20),
         DamageDealer(amount=1.0),
         Sprite(surface),
+        Hitbox(
+            width=true_rect.width,
+            height=true_rect.height,
+            offset_x=offset_x,
+            offset_y=offset_y,
+        ),
         EnemyTag(),
         AI(),
-        Targeting(range=200, atk_range=50),
+        Targeting(range=200),
         PatrolSettings.from_random(),
         PatrolRuntime(),
         LootTable(LootTableKind.LOOT_ONE, entries),
