@@ -17,6 +17,7 @@ from client.processor import (
     TargetingProc,
     ShootingProc,
     LifetimeProc,
+    HitboxProc,
 )
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
@@ -51,6 +52,7 @@ class GameScene(Scene):
         esper.add_processor(ShootingProc())
         esper.add_processor(LifetimeProc())
         esper.add_processor(RenderProc(self._screen))
+        esper.add_processor(HitboxProc(self._screen))
 
         create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
         create_bandit(Position(400, 400))

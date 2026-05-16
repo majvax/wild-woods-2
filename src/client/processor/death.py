@@ -27,12 +27,11 @@ class DeathProc(esper.Processor):
         if not player:
             return
         p_ent, (_, php, pspeed, psprite) = player[0]
-        pweap = esper.component_for_entity(p_ent, Weapon)
 
         if php.current <= 0:
             php.current = 0
             pspeed.value = 0
-            pweap.cooldown_current = 3
+            esper.remove_component(p_ent, Weapon)
 
             psprite.surface = self.dead_image
 

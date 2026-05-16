@@ -21,7 +21,11 @@ def generate_background_surface(width: int, height: int):
 
     for y in range(rows):
         for x in range(columns):
-            noise_value = noise.pnoise2(x / scale, y / scale, base=seed)
+            noise_value = noise.pnoise2(
+                x / scale,
+                y / scale,
+                base=seed
+            )
 
             if noise_value < -0.5:
                 color = WATER_COLOR
