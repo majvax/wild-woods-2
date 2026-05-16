@@ -7,6 +7,7 @@ from .tags import EnemyTag, PlayerTag, ProjectileTag
 from .targeting import Targeting
 from .weapon import Weapon
 from .gameplay import Lifetime
+from .hitbox import Hitbox
 
 __all__ = [
     "AI",
@@ -32,4 +33,5 @@ __all__ = [
     "Invincibility",
     "Weapon",
     "Lifetime",
+    "Hitbox",
 ]

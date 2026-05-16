@@ -19,6 +19,7 @@ from client.component import (
     Speed,
     Targeting,
     Velocity,
+    Hitbox
 )
 from client.processor import (
     BrainProc,
@@ -41,7 +42,7 @@ def esper_world():
 def test_targeting_proc_sets_target_when_in_range(esper_world):
     player_id = esper.create_entity(PlayerTag(), Position(10, 10))
     enemy_id = esper.create_entity(
-        EnemyTag(), Position(12, 10), Targeting(range=5, atk_range=2)
+        EnemyTag(), Position(12, 10), Targeting(range=5)
     )
 
     TargetingProc().process(0.016)
@@ -54,7 +55,7 @@ def test_targeting_proc_sets_target_when_in_range(esper_world):
 def test_targeting_proc_clears_target_when_out_of_range(esper_world):
     player_id = esper.create_entity(PlayerTag(), Position(0, 0))
     enemy_id = esper.create_entity(
-        EnemyTag(), Position(50, 0), Targeting(range=5, atk_range=2)
+        EnemyTag(), Position(50, 0), Targeting(range=5)
     )
 
     TargetingProc().process(0.016)
@@ -68,7 +69,7 @@ def test_brain_proc_chase_moves_toward_target(esper_world):
     target_id = esper.create_entity(Position(10, 0))
     enemy_id = esper.create_entity(
         AI(),
-        Targeting(range=200, atk_range=5, distance=100, target=target_id),
+        Targeting(range=200, distance=100, target=target_id),
         Position(0, 0),
         Velocity(0, 0),
         Speed(100),
@@ -94,7 +95,7 @@ def test_brain_proc_patrol_applies_direction(esper_world, monkeypatch):
 
     enemy_id = esper.create_entity(
         AI(),
-        Targeting(range=200, atk_range=5, distance=float("inf"), target=None),
+        Targeting(range=200, distance=float("inf"), target=None),
         Position(0, 0),
         Velocity(0, 0),
         Speed(100),
@@ -207,13 +208,14 @@ def test_loot_proc_loot_many_spawns_items(esper_world, monkeypatch):
 
 
 def test_brain_proc_attack_when_in_range(esper_world):
-    target_id = esper.create_entity(Position(0, 0))
+    target_id = esper.create_entity(Position(0, 0), Hitbox(width=10, height=10))
     enemy_id = esper.create_entity(
         AI(AIState.CHASE),
-        Targeting(range=200, atk_range=50, distance=10, target=target_id),
+        Targeting(range=200, distance=10, target=target_id),
         Position(0, 0),
         Velocity(5, 5),
         Speed(100),
+        Hitbox(width=10, height=10),
     )
 
     BrainProc().process(0.016)
@@ -226,13 +228,14 @@ def test_brain_proc_attack_when_in_range(esper_world):
 
 
 def test_brain_proc_attack_to_chase_when_out_of_range(esper_world):
-    target_id = esper.create_entity(Position(100, 0))
+    target_id = esper.create_entity(Position(100, 0),Hitbox(width=10, height=10))
     enemy_id = esper.create_entity(
         AI(AIState.ATTACK),
-        Targeting(range=200, atk_range=10, distance=100, target=target_id),
+        Targeting(range=200, distance=100, target=target_id),
         Position(0, 0),
         Velocity(0, 0),
         Speed(100),
+        Hitbox(width=10, height=10)
     )
 
     BrainProc().process(0.016)
@@ -244,13 +247,14 @@ def test_brain_proc_attack_to_chase_when_out_of_range(esper_world):
 
 
 def test_brain_proc_chase_zero_distance(esper_world):
-    target_id = esper.create_entity(Position(0, 0))
+    target_id = esper.create_entity(Position(0, 0), Hitbox(width=10, height=10))
     enemy_id = esper.create_entity(
         AI(AIState.CHASE),
-        Targeting(range=200, atk_range=5, distance=0, target=target_id),
+        Targeting(range=200, distance=0, target=target_id),
         Position(0, 0),
         Velocity(1, 1),
         Speed(100),
+        Hitbox(width=10, height=10)
     )
 
     BrainProc().process(0.016)
