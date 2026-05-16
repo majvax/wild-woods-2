@@ -17,7 +17,6 @@ from client.component import (
 class DirectionalAnimationProc(Processor):
     @override
     def process(self, dt: float) -> None:
-        del dt
         for _, (vel, direction, state) in esper.get_components(
             Velocity, DirectionalAnimation, AnimationState
         ):

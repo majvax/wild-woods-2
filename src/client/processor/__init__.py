@@ -9,6 +9,7 @@ from .movement import MovementProc
 from .pickup import PickupProc
 from .render import RenderProc
 from .shooting import ShootingProc
+from .spatial_grid import SpatialGridProc
 from .targeting import TargetingProc
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "RenderProc",
     "TargetingProc",
     "ShootingProc",
+    "SpatialGridProc",
     "LifetimeProc",
     "HitboxProc",
 ]

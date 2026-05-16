@@ -18,6 +18,7 @@ from client.processor import (
     PickupProc,
     RenderProc,
     ShootingProc,
+    SpatialGridProc,
     TargetingProc,
 )
 from client.processor.damage import DamageProc
@@ -49,6 +50,7 @@ class GameScene(Scene):
         esper.add_processor(MovementProc())
         esper.add_processor(DirectionalAnimationProc())
         esper.add_processor(AnimationProc())
+        esper.add_processor(SpatialGridProc())
         esper.add_processor(DamageProc())
         esper.add_processor(PickupProc())
         esper.add_processor(DeathProc(self._on_game_over))
