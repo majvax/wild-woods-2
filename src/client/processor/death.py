@@ -31,7 +31,8 @@ class DeathProc(esper.Processor):
         if php.current <= 0:
             php.current = 0
             pspeed.value = 0
-            esper.remove_component(p_ent, Weapon)
+            if esper.has_component(p_ent, Weapon):
+                esper.remove_component(p_ent, Weapon)
 
             psprite.surface = self.dead_image
 
