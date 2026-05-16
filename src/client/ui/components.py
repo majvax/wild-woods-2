@@ -43,7 +43,7 @@ class Button:
             return cls._hover_sound
 
         try:
-            if pygame.mixer.get_init() is None:
+            if cast(None | tuple[int, int, int], pygame.mixer.get_init()) is None:
                 pygame.mixer.init()
             cls._hover_sound = pygame.mixer.Sound("assets/sound/hover.wav")
         except pygame.error:

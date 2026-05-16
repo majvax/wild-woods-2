@@ -7,6 +7,7 @@ from .map_generator import (
     TILE_SIZE,
     WATER_COLOR,
     generate_background_surface,
+    get_tile_color,
 )
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "StopCode",
     "EngineEvent",
     "generate_background_surface",
+    "get_tile_color",
     "WATER_COLOR",
     "FOREST_COLOR",
     "CITY_COLOR",

@@ -50,6 +50,7 @@ class PauseScene(Scene):
     def on_enter(self) -> None:
         self._engine.set_snow_paused(True)
 
+    @override
     def on_exit(self) -> None:
         self._engine.set_snow_paused(False)
 

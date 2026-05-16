@@ -14,6 +14,10 @@ class ShootingProc(esper.Processor):
     def process(self, dt: float):
         mouse_buttons = pygame.mouse.get_pressed()
         is_clicking = mouse_buttons[0]
+        screen = pygame.display.get_surface()
+        if screen is None:
+            return
+        width, height = screen.get_size()
         for _, (_, ppos, weapon) in esper.get_components(PlayerTag, Position, Weapon):
             if weapon.cooldown_current > 0:
                 weapon.cooldown_current -= dt
@@ -21,8 +25,13 @@ class ShootingProc(esper.Processor):
             if is_clicking and weapon.cooldown_current <= 0:
                 mpos_x, mpos_y = pygame.mouse.get_pos()
 
-                dx = mpos_x - ppos.x
-                dy = mpos_y - ppos.y
+                offset_x = width / 2 - ppos.x
+                offset_y = height / 2 - ppos.y
+                world_mouse_x = mpos_x - offset_x
+                world_mouse_y = mpos_y - offset_y
+
+                dx = world_mouse_x - ppos.x
+                dy = world_mouse_y - ppos.y
                 angle = math.atan2(dy, dx)
 
                 vel_x = math.cos(angle) * weapon.bullet_speed
