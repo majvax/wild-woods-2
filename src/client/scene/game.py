@@ -23,6 +23,7 @@ from client.processor import (
 )
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
+from client.processor.render_helpers import ChunkRenderer
 from client.scene.gameover import GameOverScene
 
 from .pause import PauseScene
