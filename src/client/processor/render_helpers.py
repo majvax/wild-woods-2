@@ -2,7 +2,7 @@ import math
 import queue
 import random
 import threading
-from collections import deque
+from collections import OrderedDict, deque
 from dataclasses import dataclass
 from typing import Callable, final
 
@@ -106,6 +106,7 @@ class ChunkRenderer:
         seed: int,
         noise_scale: float,
         prewarm_margin: int,
+        max_cache: int,
         get_tile_color: Callable[[int, int, int, float], tuple[int, int, int]],
         get_tile_biome: Callable[[int, int, int, float], str] | None = None,
         color_for_biome: Callable[[str], tuple[int, int, int]] | None = None,
@@ -116,11 +117,14 @@ class ChunkRenderer:
         self._noise_scale = noise_scale
         self._prewarm_margin = prewarm_margin
         self._get_tile_color = get_tile_color
+        self._max_cache = max_cache
         self._get_tile_biome = get_tile_biome
         self._color_for_biome = color_for_biome
-        self._cache: dict[tuple[int, int], pygame.Surface] = {}
+        self._cache: "OrderedDict[tuple[int, int], pygame.Surface]" = OrderedDict()
         self._biome_cache: dict[tuple[int, int], list[list[str]]] = {}
+        self._scheduled: set[tuple[int, int]] = set()
         self._prewarm_queue: deque[tuple[int, int]] = deque()
+        self._completed_count = 0
         self._ready_queue: queue.Queue[
             tuple[int, int, list[list[tuple[int, int, int]]], list[list[str]] | None]
         ] = queue.Queue()
@@ -137,9 +141,32 @@ class ChunkRenderer:
     def cache_size(self) -> int:
         return len(self._cache)
 
+    @property
+    def max_cache(self) -> int:
+        return self._max_cache
+
+    @property
+    def seed(self) -> int:
+        return self._seed
+
+    @property
+    def noise_scale(self) -> float:
+        return self._noise_scale
+
+    def scheduled_count(self) -> int:
+        return len(self._scheduled)
+
+    def completed_count(self) -> int:
+        return self._completed_count
+
     def schedule_prewarm(
-        self, width: int, height: int, center_chunk: tuple[int, int]
-    ) -> None:
+        self,
+        width: int,
+        height: int,
+        center_chunk: tuple[int, int],
+        *,
+        prefer_near: bool = True,
+    ) -> int:
         chunks_x = math.ceil(width / self.chunk_world_size)
         chunks_y = math.ceil(height / self.chunk_world_size)
         half_x = chunks_x // 2 + self._prewarm_margin
@@ -150,8 +177,24 @@ class ChunkRenderer:
         for dy in range(-half_y, half_y + 1):
             for dx in range(-half_x, half_x + 1):
                 coords.append((cx + dx, cy + dy))
-        coords.sort(key=lambda p: abs(p[0] - cx) + abs(p[1] - cy))
-        self._prewarm_queue.extend(coords)
+        coords.sort(
+            key=lambda p: abs(p[0] - cx) + abs(p[1] - cy), reverse=not prefer_near
+        )
+
+        capacity = self._max_cache - (len(self._cache) + len(self._scheduled))
+        if capacity <= 0:
+            return 0
+
+        scheduled = 0
+        for coord in coords:
+            if coord in self._cache or coord in self._scheduled:
+                continue
+            self._scheduled.add(coord)
+            self._prewarm_queue.append(coord)
+            scheduled += 1
+            if scheduled >= capacity:
+                break
+        return scheduled
 
     def pump_ready(self, max_per_frame: int) -> None:
         for _ in range(max_per_frame):
@@ -172,9 +215,11 @@ class ChunkRenderer:
                             self._tile_size,
                         ),
                     )
-            self._cache[(chunk_x, chunk_y)] = surface
+            self._insert_cache((chunk_x, chunk_y), surface)
             if biomes is not None:
                 self._biome_cache[(chunk_x, chunk_y)] = biomes
+            self._scheduled.discard((chunk_x, chunk_y))
+            self._completed_count += 1
 
     def _prewarm_worker(self) -> None:
         while True:
@@ -184,6 +229,7 @@ class ChunkRenderer:
                 threading.Event().wait(0.01)
                 continue
             if (chunk_x, chunk_y) in self._cache:
+                self._scheduled.discard((chunk_x, chunk_y))
                 continue
             colors, biomes = self._compute_chunk_colors(chunk_x, chunk_y)
             self._ready_queue.put((chunk_x, chunk_y, colors, biomes))
@@ -239,13 +285,25 @@ class ChunkRenderer:
             self._biome_cache[(chunk_x, chunk_y)] = biomes
         return surface
 
+    def _insert_cache(self, key: tuple[int, int], surface: pygame.Surface) -> None:
+        if key in self._cache:
+            self._cache.move_to_end(key)
+            self._cache[key] = surface
+        else:
+            self._cache[key] = surface
+        while len(self._cache) > self._max_cache:
+            evicted_key, _ = self._cache.popitem(last=False)
+            self._biome_cache.pop(evicted_key, None)
+            self._scheduled.discard(evicted_key)
+
     def _get_chunk(self, chunk_x: int, chunk_y: int) -> pygame.Surface:
         key = (chunk_x, chunk_y)
         cached = self._cache.get(key)
         if cached is not None:
+            self._cache.move_to_end(key)
             return cached
         surface = self._render_chunk(chunk_x, chunk_y)
-        self._cache[key] = surface
+        self._insert_cache(key, surface)
         return surface
 
     def get_biome_for_tile(self, tile_x: int, tile_y: int) -> str | None:

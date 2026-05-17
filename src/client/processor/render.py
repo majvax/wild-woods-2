@@ -24,7 +24,13 @@ from client.processor.render_helpers import (
 
 @final
 class RenderProc(Processor):
-    def __init__(self, screen: pygame.Surface, engine: Engine):
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        engine: Engine,
+        *,
+        chunk_renderer: ChunkRenderer | None = None,
+    ):
         super().__init__()
         self.screen = screen
         self._engine = engine
@@ -36,19 +42,25 @@ class RenderProc(Processor):
         self._snow = SnowSystem()
         self._snow.init_flakes(width, height)
         self._last_prewarm_center = (0, 0)
-        self._chunks = ChunkRenderer(
-            tile_size=TILE_SIZE,
-            chunk_size=CHUNK_SIZE_TILES,
-            seed=self._background_seed,
-            noise_scale=self._noise_scale,
-            prewarm_margin=5,
-            get_tile_color=get_tile_color,
-            get_tile_biome=get_tile_biome,
-            color_for_biome=color_for_biome,
-        )
-        self._chunks.schedule_prewarm(
-            width, height, center_chunk=self._last_prewarm_center
-        )
+        if chunk_renderer is None:
+            self._chunks = ChunkRenderer(
+                tile_size=TILE_SIZE,
+                chunk_size=CHUNK_SIZE_TILES,
+                seed=self._background_seed,
+                noise_scale=self._noise_scale,
+                prewarm_margin=5,
+                max_cache=4000,
+                get_tile_color=get_tile_color,
+                get_tile_biome=get_tile_biome,
+                color_for_biome=color_for_biome,
+            )
+            self._chunks.schedule_prewarm(
+                width, height, center_chunk=self._last_prewarm_center
+            )
+        else:
+            self._chunks = chunk_renderer
+            self._background_seed = chunk_renderer.seed
+            self._noise_scale = chunk_renderer.noise_scale
         self._debug_overlay = DebugOverlay(
             font=self.font,
             engine=self._engine,
@@ -72,9 +84,11 @@ class RenderProc(Processor):
             )
             if current_chunk != self._last_prewarm_center:
                 self._last_prewarm_center = current_chunk
-                self._chunks.schedule_prewarm(width, height, current_chunk)
+                self._chunks.schedule_prewarm(
+                    width, height, current_chunk, prefer_near=True
+                )
 
-        self._chunks.pump_ready(max_per_frame=12)
+        self._chunks.pump_ready(max_per_frame=5)
         self._chunks.draw(self.screen, width, height, offset_x, offset_y)
         if self._engine.debug_enabled:
             self._chunks.draw_outlines(

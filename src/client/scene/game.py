@@ -34,12 +34,13 @@ class GameScene(Scene):
     _screen: pygame.Surface
     _timer: float
 
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, chunk_renderer: ChunkRenderer | None = None):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
         self._engine = engine
         self._game_over_requested = False
+        self._chunk_renderer = chunk_renderer
 
     @override
     def on_enter(self) -> None:
@@ -57,7 +58,16 @@ class GameScene(Scene):
         esper.add_processor(ShootingProc())
         esper.add_processor(LifetimeProc())
 
-        esper.add_processor(RenderProc(self._screen, self._engine))
+        if self._chunk_renderer is None:
+            esper.add_processor(RenderProc(self._screen, self._engine))
+        else:
+            esper.add_processor(
+                RenderProc(
+                    self._screen,
+                    self._engine,
+                    chunk_renderer=self._chunk_renderer,
+                )
+            )
 
         chunk_world_size = CHUNK_SIZE_TILES * TILE_SIZE
         create_player(Position(chunk_world_size / 2, chunk_world_size / 2))
