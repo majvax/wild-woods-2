@@ -6,12 +6,13 @@ from client.component import (
     DamageDealer,
     EnemyTag,
     Health,
+    Hitbox,
     Invincibility,
     PlayerTag,
     Position,
     ProjectileTag,
-    Hitbox,
 )
+from client.core.spatial import get_active_grid
 
 
 @final
@@ -35,11 +36,22 @@ class DamageProc(esper.Processor):
             ppos.y + phit.offset_y + phit.height / 2,
         )
 
+        grid = get_active_grid()
+
         pinv.time -= dt
         if pinv.time <= 0:
-            for _, (_, epos, edmg, ehit) in esper.get_components(
-                EnemyTag, Position, DamageDealer, Hitbox
-            ):
+            candidates = grid.query_aabb(p_left, p_top, p_right, p_bottom)
+            for ent in candidates:
+                if ent == p_ent:
+                    continue
+                try:
+                    edmg = esper.component_for_entity(ent, DamageDealer)
+                    ehit = esper.component_for_entity(ent, Hitbox)
+                    esper.component_for_entity(ent, EnemyTag)
+                    epos = esper.component_for_entity(ent, Position)
+                except KeyError:
+                    continue
+
                 e_left, e_right = (
                     epos.x + ehit.offset_x - ehit.width / 2,
                     epos.x + ehit.offset_x + ehit.width / 2,
@@ -59,12 +71,31 @@ class DamageProc(esper.Processor):
                     pinv.time = 1
                     break
 
-        enemies = list(esper.get_components(EnemyTag, Position, Health, Hitbox))
         projectiles_to_delete: set[int] = set()
         for b_ent, (_, bpos, bdamage, bhit) in esper.get_components(
             ProjectileTag, Position, DamageDealer, Hitbox
         ):
-            for _, (_, epos, ehp, ehit) in enemies:
+            b_left, b_right = (
+                bpos.x + bhit.offset_x - bhit.width / 2,
+                bpos.x + bhit.offset_x + bhit.width / 2,
+            )
+            b_top, b_bottom = (
+                bpos.y + bhit.offset_y - bhit.height / 2,
+                bpos.y + bhit.offset_y + bhit.height / 2,
+            )
+
+            candidates = grid.query_aabb(b_left, b_top, b_right, b_bottom)
+            for ent in candidates:
+                if ent == b_ent:
+                    continue
+                try:
+                    ehp = esper.component_for_entity(ent, Health)
+                    ehit = esper.component_for_entity(ent, Hitbox)
+                    esper.component_for_entity(ent, EnemyTag)
+                    epos = esper.component_for_entity(ent, Position)
+                except KeyError:
+                    continue
+
                 e_left, e_right = (
                     epos.x + ehit.offset_x - ehit.width / 2,
                     epos.x + ehit.offset_x + ehit.width / 2,
@@ -72,15 +103,6 @@ class DamageProc(esper.Processor):
                 e_top, e_bottom = (
                     epos.y + ehit.offset_y - ehit.height / 2,
                     epos.y + ehit.offset_y + ehit.height / 2,
-                )
-
-                b_left, b_right = (
-                    bpos.x + bhit.offset_x - bhit.width / 2,
-                    bpos.x + bhit.offset_x + bhit.width / 2,
-                )
-                b_top, b_bottom = (
-                    bpos.y + bhit.offset_y - bhit.height / 2,
-                    bpos.y + bhit.offset_y + bhit.height / 2,
                 )
 
                 if (
