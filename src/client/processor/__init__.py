@@ -11,6 +11,9 @@ from .render import RenderProc
 from .shooting import ShootingProc
 from .spatial_grid import SpatialGridProc
 from .targeting import TargetingProc
+from .shooting import ShootingProc
+from .lifetime import LifetimeProc
+from .hitbox import HitboxProc
 
 __all__ = [
     "DirectionalAnimationProc",

@@ -3,6 +3,7 @@ from typing import cast, final, override
 
 import esper
 import pygame
+import random
 
 from client.component import PlayerTag, Position
 from client.core import CHUNK_SIZE_TILES, TILE_SIZE, Engine
@@ -20,6 +21,8 @@ from client.processor import (
     ShootingProc,
     SpatialGridProc,
     TargetingProc,
+    ShootingProc,
+    LifetimeProc,
 )
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
