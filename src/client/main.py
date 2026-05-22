@@ -1,10 +1,10 @@
 from client.core import Engine
-from client.scene.game import GameScene
+from client.scene.main_menu import MainMenuScene
 
 
 def main() -> int:
     engine = Engine()
-    engine.sm.push(GameScene, engine)
+    engine.sm.push(MainMenuScene, engine)
     return engine.run()
 
 

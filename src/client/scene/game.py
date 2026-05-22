@@ -1,22 +1,29 @@
+import random
 from typing import cast, final, override
 
 import esper
 import pygame
 
-from client.component import Position
-from client.core import Engine
+from client.component import PlayerTag, Position
+from client.core import CHUNK_SIZE_TILES, TILE_SIZE, Engine
 from client.factory import create_bandit, create_player
 from client.processor import (
+    AnimationProc,
     BrainProc,
+    DirectionalAnimationProc,
     InputProc,
     LootProc,
     MovementProc,
     PickupProc,
     RenderProc,
+    SpatialGridProc,
     TargetingProc,
+    ShootingProc,
+    LifetimeProc,
 )
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
+from client.processor.render_helpers import ChunkRenderer
 from client.scene.gameover import GameOverScene
 
 from .pause import PauseScene
@@ -28,12 +35,13 @@ class GameScene(Scene):
     _screen: pygame.Surface
     _timer: float
 
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, chunk_renderer: ChunkRenderer | None = None):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
         self._engine = engine
         self._game_over_requested = False
+        self._chunk_renderer = chunk_renderer
 
     @override
     def on_enter(self) -> None:
@@ -44,16 +52,52 @@ class GameScene(Scene):
         esper.add_processor(BrainProc())
         esper.add_processor(LootProc())
         esper.add_processor(MovementProc())
+        esper.add_processor(DirectionalAnimationProc())
+        esper.add_processor(AnimationProc())
+        esper.add_processor(SpatialGridProc())
         esper.add_processor(DamageProc())
         esper.add_processor(PickupProc())
         esper.add_processor(DeathProc(self._on_game_over))
-        esper.add_processor(RenderProc(self._screen))
+        esper.add_processor(ShootingProc())
+        esper.add_processor(LifetimeProc())
 
-        create_player(Position(self._screen.size[0] / 2, self._screen.size[1] / 2))
-        create_bandit(Position(400, 400))
+        if self._chunk_renderer is None:
+            esper.add_processor(RenderProc(self._screen, self._engine))
+        else:
+            esper.add_processor(
+                RenderProc(
+                    self._screen,
+                    self._engine,
+                    chunk_renderer=self._chunk_renderer,
+                )
+            )
+
+        chunk_world_size = CHUNK_SIZE_TILES * TILE_SIZE
+        create_player(Position(chunk_world_size / 2, chunk_world_size / 2))
+        self._spawn_bandit_near_player()
+
+    def _get_player_position(self) -> Position:
+        players = esper.get_components(PlayerTag, Position)
+        if players:
+            _, (_, pos) = players[0]
+            return pos
+        return Position(0, 0)
+
+    def _spawn_bandit_near_player(self) -> None:
+        player_pos = self._get_player_position()
+        spawn_radius_x = self._screen.get_width() * 0.8
+        spawn_radius_y = self._screen.get_height() * 0.8
+        offset_x = (random.random() - 0.5) * spawn_radius_x
+        offset_y = (random.random() - 0.5) * spawn_radius_y
+        pos = Position(player_pos.x + offset_x, player_pos.y + offset_y)
+        create_bandit(pos)
 
     def _on_game_over(self) -> None:
         self._game_over_requested = True
+
+    @override
+    def on_exit(self) -> None:
+        pass
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
@@ -64,16 +108,11 @@ class GameScene(Scene):
                     return True
 
         # Spawn bandits every 5 seconds
-        # self._timer += dt
-        # if self._timer > 0.1:
-        #     pos = Position(
-        #         self._screen.get_width() * 0.1
-        #         + self._screen.get_width() * 0.8 * random.random(),
-        #         self._screen.get_height() * 0.1
-        #         + self._screen.get_height() * 0.8 * random.random(),
-        #     )
-        #     create_bandit(pos)
-        #     self._timer = 0
+        self._timer += dt
+
+        if self._timer > 4:
+            self._spawn_bandit_near_player()
+            self._timer = 0
 
         esper.process(dt)
 

@@ -13,6 +13,7 @@ from client.component import (
     Speed,
     Targeting,
     Velocity,
+    Hitbox,
 )
 
 
@@ -24,10 +25,10 @@ class BrainProc(esper.Processor):
             AI, Targeting, Position, Velocity
         ):
             speed = esper.component_for_entity(ent, Speed)
-            self._transition(ai, targeting)
+            self._transition(ent, ai, targeting)
             self._apply_movement(ent, ai, targeting, pos, vel, speed, dt)
 
-    def _transition(self, ai: AI, targeting: Targeting) -> None:
+    def _transition(self, ent: int, ai: AI, targeting: Targeting) -> None:
         has_target = targeting.target is not None
 
         match ai.state:
@@ -44,13 +45,13 @@ class BrainProc(esper.Processor):
             case AIState.CHASE:
                 if not has_target:
                     ai.state = AIState.PATROL
-                elif targeting.distance <= targeting.atk_range:
+                elif self._hitboxes_overlap(ent, targeting.target is not None):
                     ai.state = AIState.ATTACK
 
             case AIState.ATTACK:
                 if not has_target:
                     ai.state = AIState.PATROL
-                elif targeting.distance > targeting.atk_range:
+                elif not self._hitboxes_overlap(ent, targeting.target is not None):
                     ai.state = AIState.CHASE
 
             case _:
@@ -115,3 +116,35 @@ class BrainProc(esper.Processor):
 
         angle = random.uniform(0.0, math.tau)
         runtime.direction = (math.cos(angle), math.sin(angle))
+
+    def _hitboxes_overlap(self, ent: int, target: int) -> bool:
+
+        epos = esper.component_for_entity(ent, Position)
+        ehit = esper.component_for_entity(ent, Hitbox)
+        ppos = esper.component_for_entity(target, Position)
+        phit = esper.component_for_entity(target, Hitbox)
+
+        p_left, p_right = (
+            ppos.x + phit.offset_x - phit.width / 2,
+            ppos.x + phit.offset_x + phit.width / 2,
+        )
+        p_top, p_bottom = (
+            ppos.y + phit.offset_y - phit.height / 2,
+            ppos.y + phit.offset_y + phit.height / 2,
+        )
+
+        e_left, e_right = (
+            epos.x + ehit.offset_x - ehit.width / 2,
+            epos.x + ehit.offset_x + ehit.width / 2,
+        )
+        e_top, e_bottom = (
+            epos.y + ehit.offset_y - ehit.height / 2,
+            epos.y + ehit.offset_y + ehit.height / 2,
+        )
+
+        return (
+            e_left < p_right
+            and e_right > p_left
+            and e_top < p_bottom
+            and e_bottom > p_top
+        )

@@ -1,17 +1,22 @@
+from client.core import biome
 from client.core import map_generator as mg
 
 
-def test_generate_background_surface_water(monkeypatch):
-    monkeypatch.setattr(mg.noise, "pnoise2", lambda x, y, base=0: -1.0)
+def test_generate_background_surface_uses_tile_color(monkeypatch):
+    monkeypatch.setattr(
+        mg, "get_tile_color", lambda x, y, seed, scale: biome.SNOW_COLOR
+    )
 
     surface = mg.generate_background_surface(20, 20)
 
-    assert surface.get_at((1, 1))[:3] == mg.WATER_COLOR
+    assert surface.get_at((1, 1))[:3] == biome.SNOW_COLOR
 
 
-def test_generate_background_surface_city(monkeypatch):
-    monkeypatch.setattr(mg.noise, "pnoise2", lambda x, y, base=0: 1.0)
+def test_generate_background_surface_uses_tile_color_with_alt_value(monkeypatch):
+    monkeypatch.setattr(
+        mg, "get_tile_color", lambda x, y, seed, scale: biome.FOREST_COLOR
+    )
 
     surface = mg.generate_background_surface(20, 20)
 
-    assert surface.get_at((1, 1))[:3] == mg.CITY_COLOR
+    assert surface.get_at((1, 1))[:3] == biome.FOREST_COLOR

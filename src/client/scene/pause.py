@@ -61,7 +61,11 @@ class PauseScene(Scene):
 
     @override
     def on_enter(self) -> None:
-        pass
+        self._engine.set_snow_paused(True)
+
+    @override
+    def on_exit(self) -> None:
+        self._engine.set_snow_paused(False)
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
