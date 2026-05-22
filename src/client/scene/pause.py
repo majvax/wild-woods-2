@@ -25,21 +25,24 @@ class PauseScene(Scene):
             "Quitter", NEON_PURPLE, 28, 12, 10, 18, on_click=self._quit
         )
         self._font_label = pygame.font.SysFont("Arial", 18)
-        #Calcul de la position pour centrer "Musique" + switch horizontalement
+        # Calcul de la position pour centrer "Musique" + switch horizontalement
         label_w, _ = self._font_label.size("Musique")
         gap, switch_w, switch_h = 10, 50, 28
         total_w = label_w + gap + switch_w
-        self._sound_label_x = w // 2 - total_w // 2  #bord gauche du label
-        initial_music_on = pygame.mixer.music.get_volume() > 0  #True si la musique est active (volume > 0)
+        self._sound_label_x = w // 2 - total_w // 2  # bord gauche du label
+        initial_music_on = (
+            pygame.mixer.music.get_volume() > 0
+        )  # True si la musique est active (volume > 0)
         self._sound_switch = ToggleSwitch(
             NEON_PURPLE_SWITCH,
-            switch_w, switch_h,
-            value=initial_music_on, #état initial calé sur le volume actuel
-            on_toggle=self._toggle_music,  #callback appelé à chaque bascule
+            switch_w,
+            switch_h,
+            value=initial_music_on,  # état initial calé sur le volume actuel
+            on_toggle=self._toggle_music,  # callback appelé à chaque bascule
         )
         switch_cx = (
             w // 2 - total_w // 2 + label_w + gap + switch_w // 2
-        )  #centre du switch
+        )  # centre du switch
         switch_y = h // 2 + 110 - switch_h // 2
 
         self._btn_resume.set_rect(w // 2, h // 2 - 30)
@@ -47,7 +50,7 @@ class PauseScene(Scene):
         self._sound_switch.set_rect(switch_cx, switch_y)
 
     def _toggle_music(self, enabled: bool) -> None:
-        #Met le volume à 1.0 si activé, 0.0 si désactivé
+        # Met le volume à 1.0 si activé, 0.0 si désactivé
         pygame.mixer.music.set_volume(1.0 if enabled else 0.0)
 
     def _resume(self) -> None:
