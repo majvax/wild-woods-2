@@ -141,7 +141,7 @@ class ToggleSwitch:
             0.0, min(1.0, self._hover_t + speed * dt * (1.0 if hovered else -1.0))
         )
 
-        #Animation du glissement
+        # Animation du glissement
         target = 1.0 if self.value else 0.0
         self._slide_t += (target - self._slide_t) * min(1.0, speed * 2 * dt)
 
@@ -157,8 +157,8 @@ class ToggleSwitch:
 
     def draw(self, surface: pygame.Surface) -> None:
         c = self.colors
-        r = self.rect.height // 2  #rayon de la piste 
-        knob_r = r - 3  #rayon du rond
+        r = self.rect.height // 2  # rayon de la piste
+        knob_r = r - 3  # rayon du rond
 
         if not self.enabled:
             pygame.draw.rect(surface, c["track_disabled"], self.rect, border_radius=r)
@@ -174,29 +174,29 @@ class ToggleSwitch:
         track = lerp_color(track, c["track_hover"], self._hover_t * 0.3)
         pygame.draw.rect(surface, track, self.rect, border_radius=r)
 
-        #Position du rond : de (x + r) à (x + width - r)
+        # Position du rond : de (x + r) à (x + width - r)
         knob_x = int(self.rect.x + r + (self.rect.width - 2 * r) * self._slide_t)
         pygame.draw.circle(surface, c["knob"], (knob_x, self.rect.centery), knob_r)
 
 
 NEON_PURPLE: dict[str, pygame.Color] = {
-    "bg": pygame.Color(22, 18, 42),  #fond normal
-    "bg_hover": pygame.Color(30, 24, 64),  #fond au survol
-    "bg_press": pygame.Color(18, 15, 32),  #fond au clic
-    "border": pygame.Color(106, 79, 207),  #bordure normale
-    "border_hover": pygame.Color(160, 125, 255),  #bordure au survol
-    "text": pygame.Color(200, 184, 255),  #texte normal
-    "text_hover": pygame.Color(255, 255, 255),  #texte au survol
-    "bg_disabled": pygame.Color(17, 17, 24),  #fond si désactivé
-    "border_disabled": pygame.Color(51, 51, 51),  #bordure si désactivé
-    "text_disabled": pygame.Color(85, 85, 85),  #texte si désactivé
+    "bg": pygame.Color(22, 18, 42),  # fond normal
+    "bg_hover": pygame.Color(30, 24, 64),  # fond au survol
+    "bg_press": pygame.Color(18, 15, 32),  # fond au clic
+    "border": pygame.Color(106, 79, 207),  # bordure normale
+    "border_hover": pygame.Color(160, 125, 255),  # bordure au survol
+    "text": pygame.Color(200, 184, 255),  # texte normal
+    "text_hover": pygame.Color(255, 255, 255),  # texte au survol
+    "bg_disabled": pygame.Color(17, 17, 24),  # fond si désactivé
+    "border_disabled": pygame.Color(51, 51, 51),  # bordure si désactivé
+    "text_disabled": pygame.Color(85, 85, 85),  # texte si désactivé
 }
 
 NEON_PURPLE_SWITCH: dict[str, pygame.Color] = {
-    "track_off": pygame.Color(40, 35, 60),  #piste éteinte
-    "track_on": pygame.Color(106, 79, 207),  #piste allumée
-    "track_hover": pygame.Color(160, 125, 255),  #piste au survol
-    "knob": pygame.Color(230, 220, 255),  #rond
-    "track_disabled": pygame.Color(25, 25, 35),  #piste désactivée
-    "knob_disabled": pygame.Color(60, 60, 70),  #rond désactivé
+    "track_off": pygame.Color(40, 35, 60),  # piste éteinte
+    "track_on": pygame.Color(106, 79, 207),  # piste allumée
+    "track_hover": pygame.Color(160, 125, 255),  # piste au survol
+    "knob": pygame.Color(230, 220, 255),  # rond
+    "track_disabled": pygame.Color(25, 25, 35),  # piste désactivée
+    "knob_disabled": pygame.Color(60, 60, 70),  # rond désactivé
 }
