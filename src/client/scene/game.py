@@ -37,6 +37,8 @@ class GameScene(Scene):
 
     @override
     def on_enter(self) -> None:
+        pygame.mixer.music.load("music/main-music.mp3")
+        pygame.mixer.music.play(-1)
         esper.add_processor(InputProc())
         esper.add_processor(TargetingProc())
         esper.add_processor(BrainProc())
