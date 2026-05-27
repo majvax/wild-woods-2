@@ -84,7 +84,7 @@ def test_brain_proc_chase_moves_toward_target(esper_world):
 
 
 def test_brain_proc_patrol_seeks_campfire(esper_world):
-    esper.create_entity(CampfireTag(), Position(100, 0))
+    esper.create_entity(CampfireTag(), Position(100, 0), Hitbox(width=32, height=32))
 
     enemy_id = esper.create_entity(
         AI(),

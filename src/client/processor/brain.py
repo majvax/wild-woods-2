@@ -91,14 +91,14 @@ class BrainProc(esper.Processor):
         vel.vy = (dy / dist) * speed.value
 
     def _apply_campfire_seek(self, pos: Position, vel: Velocity, speed: Speed) -> None:
-        campfires = esper.get_components(CampfireTag, Position)
+        campfires = esper.get_components(CampfireTag, Position, Hitbox)
         if not campfires:
             vel.vx = 0.0
             vel.vy = 0.0
             return
-        _, (_, c_pos) = campfires[0]
-        dx = c_pos.x - pos.x
-        dy = c_pos.y - pos.y
+        _, (_, c_pos, c_hit) = campfires[0]
+        dx = (c_pos.x + c_hit.offset_x) - pos.x
+        dy = (c_pos.y + c_hit.offset_y) - pos.y
         dist = math.hypot(dx, dy)
         if dist == 0:
             vel.vx = 0.0
