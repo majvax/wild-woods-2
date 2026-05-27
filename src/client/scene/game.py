@@ -1,3 +1,4 @@
+import math
 import random
 from typing import cast, final, override
 
@@ -80,7 +81,7 @@ class GameScene(Scene):
         cx, cy = chunk_world_size / 2, chunk_world_size / 2
         create_player(Position(cx, cy))
         create_campfire(Position(cx, cy))
-        self._spawn_bandit_near_player()
+        self._spawn_bandit_near_campfire()
 
     def _get_player_position(self) -> Position:
         players = esper.get_components(PlayerTag, Position)
@@ -89,13 +90,13 @@ class GameScene(Scene):
             return pos
         return Position(0, 0)
 
-    def _spawn_bandit_near_player(self) -> None:
+    def _spawn_bandit_near_campfire(self) -> None:
         player_pos = self._get_player_position()
-        spawn_radius_x = self._screen.get_width() * 0.8
-        spawn_radius_y = self._screen.get_height() * 0.8
-        offset_x = (random.random() - 0.5) * spawn_radius_x
-        offset_y = (random.random() - 0.5) * spawn_radius_y
-        pos = Position(player_pos.x + offset_x, player_pos.y + offset_y)
+        angle = random.uniform(0, 2 * math.pi)
+        dist = random.uniform(300, 500)
+        pos = Position(
+            player_pos.x + dist * math.cos(angle), player_pos.y + dist * math.sin(angle)
+        )
         create_bandit(pos)
 
     def _on_game_over(self) -> None:
@@ -120,7 +121,7 @@ class GameScene(Scene):
         self._timer += dt
 
         if self._timer > 4:
-            self._spawn_bandit_near_player()
+            self._spawn_bandit_near_campfire()
             self._timer = 0
 
         esper.process(dt)
