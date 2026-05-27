@@ -8,12 +8,11 @@ import pytest
 from client.component import (
     AI,
     AIState,
+    CampfireTag,
     EnemyTag,
     ItemKind,
     LootTable,
     LootTableKind,
-    PatrolRuntime,
-    PatrolSettings,
     PlayerTag,
     Position,
     Speed,
@@ -84,14 +83,8 @@ def test_brain_proc_chase_moves_toward_target(esper_world):
     assert vel.vy == pytest.approx(0.0)
 
 
-def test_brain_proc_patrol_applies_direction(esper_world, monkeypatch):
-    def fake_uniform(a: float, b: float) -> float:
-        if b == math.tau:
-            return 0.0
-        return 1.0
-
-    monkeypatch.setattr("client.processor.brain.random.random", lambda: 1.0)
-    monkeypatch.setattr("client.processor.brain.random.uniform", fake_uniform)
+def test_brain_proc_patrol_seeks_campfire(esper_world):
+    esper.create_entity(CampfireTag(), Position(100, 0))
 
     enemy_id = esper.create_entity(
         AI(),
@@ -99,8 +92,6 @@ def test_brain_proc_patrol_applies_direction(esper_world, monkeypatch):
         Position(0, 0),
         Velocity(0, 0),
         Speed(100),
-        PatrolSettings.from_random(),
-        PatrolRuntime(),
     )
 
     BrainProc().process(0.016)
@@ -108,7 +99,7 @@ def test_brain_proc_patrol_applies_direction(esper_world, monkeypatch):
     ai = esper.component_for_entity(enemy_id, AI)
     vel = esper.component_for_entity(enemy_id, Velocity)
     assert ai.state == AIState.PATROL
-    assert vel.vx == pytest.approx(50.0)
+    assert vel.vx == pytest.approx(20.0)
     assert vel.vy == pytest.approx(0.0)
 
 

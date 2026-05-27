@@ -118,14 +118,17 @@ class RenderProc(Processor):
                 ),
             )
 
-        for _, (_, pos, hitbox) in esper.get_components(CampfireTag, Position, Hitbox):
-            hx = int(pos.x + hitbox.offset_x + offset_x - hitbox.width / 2)
-            hy = int(pos.y + hitbox.offset_y + offset_y - hitbox.height / 2)
-            hitbox_surf = pygame.Surface(
-                (int(hitbox.width), int(hitbox.height)), pygame.SRCALPHA
-            )
-            hitbox_surf.fill((0, 255, 0, 120))
-            self.screen.blit(hitbox_surf, (hx, hy))
+        if self._engine.debug_enabled:
+            for _, (_, pos, hitbox) in esper.get_components(
+                CampfireTag, Position, Hitbox
+            ):
+                hx = int(pos.x + hitbox.offset_x + offset_x - hitbox.width / 2)
+                hy = int(pos.y + hitbox.offset_y + offset_y - hitbox.height / 2)
+                hitbox_surf = pygame.Surface(
+                    (int(hitbox.width), int(hitbox.height)), pygame.SRCALPHA
+                )
+                hitbox_surf.fill((0, 255, 0, 120))
+                self.screen.blit(hitbox_surf, (hx, hy))
 
         if self._engine.snow_enabled:
             if not self._engine.snow_paused:

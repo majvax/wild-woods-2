@@ -3,7 +3,7 @@ from typing import final, override
 import esper
 from esper import Processor
 
-from client.component import CampfireTag, Hitbox, PlayerTag, Position
+from client.component import CampfireTag, EnemyTag, Hitbox, PlayerTag, Position
 
 
 def _bounds(pos: Position, hit: Hitbox) -> tuple[float, float, float, float]:
@@ -40,3 +40,19 @@ class CollisionProc(Processor):
                     p_pos.x += ox if p_pos.x > c_pos.x + c_hit.offset_x else -ox
                 else:
                     p_pos.y += oy if p_pos.y > c_pos.y + c_hit.offset_y else -oy
+
+        enemies = esper.get_components(EnemyTag, Position, Hitbox)
+        for _, (_, e_pos, e_hit) in enemies:
+            for _, (_, c_pos, c_hit) in campfires:
+                el, et, er, eb = _bounds(e_pos, e_hit)
+                cl, ct, cr, cb = _bounds(c_pos, c_hit)
+
+                ox = min(er, cr) - max(el, cl)
+                oy = min(eb, cb) - max(et, ct)
+                if ox <= 0 or oy <= 0:
+                    continue
+
+                if ox < oy:
+                    e_pos.x += ox if e_pos.x > c_pos.x + c_hit.offset_x else -ox
+                else:
+                    e_pos.y += oy if e_pos.y > c_pos.y + c_hit.offset_y else -oy

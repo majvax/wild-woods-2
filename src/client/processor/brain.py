@@ -1,5 +1,4 @@
 import math
-import random
 from typing import final, override
 
 import esper
@@ -7,8 +6,7 @@ import esper
 from client.component import (
     AI,
     AIState,
-    PatrolRuntime,
-    PatrolSettings,
+    CampfireTag,
     Position,
     Speed,
     Targeting,
@@ -26,7 +24,7 @@ class BrainProc(esper.Processor):
         ):
             speed = esper.component_for_entity(ent, Speed)
             self._transition(ent, ai, targeting)
-            self._apply_movement(ent, ai, targeting, pos, vel, speed, dt)
+            self._apply_movement(ai, targeting, pos, vel, speed)
 
     def _transition(self, ent: int, ai: AI, targeting: Targeting) -> None:
         has_target = targeting.target is not None
@@ -59,20 +57,18 @@ class BrainProc(esper.Processor):
 
     def _apply_movement(
         self,
-        ent: int,
         ai: AI,
         targeting: Targeting,
         pos: Position,
         vel: Velocity,
         speed: Speed,
-        dt: float,
     ) -> None:
         if ai.state == AIState.CHASE and targeting.target is not None:
             self._apply_chase(pos, vel, speed, targeting.target)
             return
 
         if ai.state == AIState.PATROL:
-            self._apply_patrol(ent, vel, speed, dt)
+            self._apply_campfire_seek(pos, vel, speed)
             return
 
         vel.vx = 0.0
@@ -94,28 +90,22 @@ class BrainProc(esper.Processor):
         vel.vx = (dx / dist) * speed.value
         vel.vy = (dy / dist) * speed.value
 
-    def _apply_patrol(self, ent: int, vel: Velocity, speed: Speed, dt: float) -> None:
-        runtime = esper.component_for_entity(ent, PatrolRuntime)
-        settings = esper.component_for_entity(ent, PatrolSettings)
-
-        runtime.timer -= dt
-        if runtime.timer <= 0.0:
-            self._pick_new_patrol_direction(runtime, settings)
-
-        vel.vx = runtime.direction[0] * speed.value * 0.5
-        vel.vy = runtime.direction[1] * speed.value * 0.5
-
-    def _pick_new_patrol_direction(
-        self, runtime: PatrolRuntime, settings: PatrolSettings
-    ) -> None:
-        runtime.timer = random.uniform(settings.min_time, settings.max_time)
-
-        if random.random() < settings.idle_chance:
-            runtime.direction = (0.0, 0.0)
+    def _apply_campfire_seek(self, pos: Position, vel: Velocity, speed: Speed) -> None:
+        campfires = esper.get_components(CampfireTag, Position)
+        if not campfires:
+            vel.vx = 0.0
+            vel.vy = 0.0
             return
-
-        angle = random.uniform(0.0, math.tau)
-        runtime.direction = (math.cos(angle), math.sin(angle))
+        _, (_, c_pos) = campfires[0]
+        dx = c_pos.x - pos.x
+        dy = c_pos.y - pos.y
+        dist = math.hypot(dx, dy)
+        if dist == 0:
+            vel.vx = 0.0
+            vel.vy = 0.0
+            return
+        vel.vx = (dx / dist) * speed.value * 0.2
+        vel.vy = (dy / dist) * speed.value * 0.2
 
     def _hitboxes_overlap(self, ent: int, target: int) -> bool:
 
