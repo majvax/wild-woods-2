@@ -1,5 +1,7 @@
 from .animation import AnimationProc, DirectionalAnimationProc
 from .brain import BrainProc
+from .campfire import CampfireProc
+from .collision import CollisionProc
 from .damage import DamageProc
 from .hitbox import HitboxProc
 from .input import InputProc
@@ -16,6 +18,8 @@ __all__ = [
     "DirectionalAnimationProc",
     "AnimationProc",
     "BrainProc",
+    "CampfireProc",
+    "CollisionProc",
     "DamageProc",
     "InputProc",
     "LootProc",

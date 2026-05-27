@@ -5,7 +5,16 @@ import esper
 import pygame
 from esper import Processor
 
-from client.component import Health, Inventory, ItemKind, PlayerTag, Position, Sprite
+from client.component import (
+    CampfireTag,
+    Health,
+    Hitbox,
+    Inventory,
+    ItemKind,
+    PlayerTag,
+    Position,
+    Sprite,
+)
 from client.core import (
     CHUNK_SIZE_TILES,
     TILE_SIZE,
@@ -109,6 +118,15 @@ class RenderProc(Processor):
                 ),
             )
 
+        for _, (_, pos, hitbox) in esper.get_components(CampfireTag, Position, Hitbox):
+            hx = int(pos.x + hitbox.offset_x + offset_x - hitbox.width / 2)
+            hy = int(pos.y + hitbox.offset_y + offset_y - hitbox.height / 2)
+            hitbox_surf = pygame.Surface(
+                (int(hitbox.width), int(hitbox.height)), pygame.SRCALPHA
+            )
+            hitbox_surf.fill((0, 255, 0, 120))
+            self.screen.blit(hitbox_surf, (hx, hy))
+
         if self._engine.snow_enabled:
             if not self._engine.snow_paused:
                 self._snow.update(dt, width, height, self._camera.x, self._camera.y)
@@ -123,6 +141,31 @@ class RenderProc(Processor):
             pygame.Color("black"),
         )
         self.screen.blit(fps_text, (10, 10))
+
+        campfires = esper.get_components(CampfireTag, Health)
+        if campfires:
+            _, (_, c_health) = campfires[0]
+            bar_w = 300
+            bar_h = 20
+            bar_x = (width - bar_w) // 2
+            bar_y = 10
+            ratio = max(0.0, c_health.current / c_health.max)
+            pygame.draw.rect(self.screen, (60, 0, 0), (bar_x, bar_y, bar_w, bar_h))
+            pygame.draw.rect(
+                self.screen, (0, 200, 0), (bar_x, bar_y, int(bar_w * ratio), bar_h)
+            )
+            label = self.font.render(
+                f"Feu de camp : {int(c_health.current)}/{int(c_health.max)}",
+                True,
+                pygame.Color("white"),
+            )
+            self.screen.blit(
+                label,
+                (
+                    bar_x + (bar_w - label.get_width()) // 2,
+                    bar_y + (bar_h - label.get_height()) // 2,
+                ),
+            )
 
         self._debug_overlay.draw(
             self.screen,
@@ -147,8 +190,8 @@ class RenderProc(Processor):
             self.screen.blit(header, (10, inv_start_y))
             y = inv_start_y + line_h
             for kind in ItemKind:
-                label = f"{kind.name.title()}: {inventory.count(kind)}"
-                item_text = self.font.render(label, True, pygame.Color("black"))
+                item_label = f"{kind.name.title()}: {inventory.count(kind)}"
+                item_text = self.font.render(item_label, True, pygame.Color("black"))
                 self.screen.blit(item_text, (10, y))
                 y += line_h
             break

@@ -4,12 +4,14 @@ from typing import cast, final, override
 import esper
 import pygame
 
-from client.component import PlayerTag, Position
+from client.component import CampfireTag, Health, PlayerTag, Position
 from client.core import CHUNK_SIZE_TILES, TILE_SIZE, Engine
-from client.factory import create_bandit, create_player
+from client.factory import create_bandit, create_campfire, create_player
 from client.processor import (
     AnimationProc,
     BrainProc,
+    CampfireProc,
+    CollisionProc,
     DirectionalAnimationProc,
     InputProc,
     LootProc,
@@ -52,8 +54,10 @@ class GameScene(Scene):
         esper.add_processor(BrainProc())
         esper.add_processor(LootProc())
         esper.add_processor(MovementProc())
+        esper.add_processor(CollisionProc())
         esper.add_processor(DirectionalAnimationProc())
         esper.add_processor(AnimationProc())
+        esper.add_processor(CampfireProc())
         esper.add_processor(SpatialGridProc())
         esper.add_processor(DamageProc())
         esper.add_processor(PickupProc())
@@ -73,7 +77,9 @@ class GameScene(Scene):
             )
 
         chunk_world_size = CHUNK_SIZE_TILES * TILE_SIZE
-        create_player(Position(chunk_world_size / 2, chunk_world_size / 2))
+        cx, cy = chunk_world_size / 2, chunk_world_size / 2
+        create_player(Position(cx, cy))
+        create_campfire(Position(cx, cy))
         self._spawn_bandit_near_player()
 
     def _get_player_position(self) -> Position:
@@ -106,6 +112,9 @@ class GameScene(Scene):
                 if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
                     self._engine.sm.push(PauseScene, self._engine)
                     return True
+                if cast(int, event.key) == pygame.K_m:
+                    for _, (_, health) in esper.get_components(CampfireTag, Health):
+                        health.current = max(0.0, health.current - 10.0)
 
         # Spawn bandits every 5 seconds
         self._timer += dt

@@ -12,7 +12,7 @@ from .gameplay import (
 from .hitbox import Hitbox
 from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
 from .physics import Orientation, Position, Speed, Velocity
-from .tags import EnemyTag, PlayerTag, ProjectileTag
+from .tags import CampfireTag, EnemyTag, PlayerTag, ProjectileTag
 from .targeting import Targeting
 from .weapon import Weapon
 
@@ -36,6 +36,7 @@ __all__ = [
     "Position",
     "Speed",
     "Velocity",
+    "CampfireTag",
     "EnemyTag",
     "PlayerTag",
     "ProjectileTag",
