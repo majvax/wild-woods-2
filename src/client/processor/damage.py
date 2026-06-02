@@ -42,9 +42,7 @@ class DamageProc(esper.Processor):
         self._projectiles_damage_enemies()
 
     def _enemies_damage_player(self, dt: float) -> None:
-        players = get_components(
-            PlayerTag, Position, Health, Invincibility, Hitbox
-        )
+        players = get_components(PlayerTag, Position, Health, Invincibility, Hitbox)
         if not players:
             return
         p_ent, (_, ppos, php, pinv, phit) = players[0]
