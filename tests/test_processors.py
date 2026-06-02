@@ -10,6 +10,7 @@ from client.component import (
     AIState,
     CampfireTag,
     EnemyTag,
+    Hitbox,
     ItemKind,
     LootTable,
     LootTableKind,
@@ -18,7 +19,6 @@ from client.component import (
     Speed,
     Targeting,
     Velocity,
-    Hitbox
 )
 from client.processor import (
     BrainProc,
@@ -40,9 +40,7 @@ def esper_world():
 
 def test_targeting_proc_sets_target_when_in_range(esper_world):
     player_id = esper.create_entity(PlayerTag(), Position(10, 10))
-    enemy_id = esper.create_entity(
-        EnemyTag(), Position(12, 10), Targeting(range=5)
-    )
+    enemy_id = esper.create_entity(EnemyTag(), Position(12, 10), Targeting(range=5))
 
     TargetingProc().process(0.016)
 
@@ -53,9 +51,7 @@ def test_targeting_proc_sets_target_when_in_range(esper_world):
 
 def test_targeting_proc_clears_target_when_out_of_range(esper_world):
     player_id = esper.create_entity(PlayerTag(), Position(0, 0))
-    enemy_id = esper.create_entity(
-        EnemyTag(), Position(50, 0), Targeting(range=5)
-    )
+    enemy_id = esper.create_entity(EnemyTag(), Position(50, 0), Targeting(range=5))
 
     TargetingProc().process(0.016)
 
@@ -186,15 +182,15 @@ def test_loot_proc_loot_many_spawns_items(esper_world, monkeypatch):
         Position(1, 2),
         LootTable(
             LootTableKind.LOOT_MANY,
-            [(ItemKind.SYRINGE, 0.5), (ItemKind.POTION, 0.5)],
+            [(ItemKind.HEALTH, 0.5), (ItemKind.LIMBS, 0.5)],
         ),
     )
 
     LootProc().process(0.016)
 
     assert created == [
-        (Position(1, 2), ItemKind.SYRINGE),
-        (Position(1, 2), ItemKind.POTION),
+        (Position(1, 2), ItemKind.HEALTH),
+        (Position(1, 2), ItemKind.LIMBS),
     ]
 
 
@@ -219,14 +215,14 @@ def test_brain_proc_attack_when_in_range(esper_world):
 
 
 def test_brain_proc_attack_to_chase_when_out_of_range(esper_world):
-    target_id = esper.create_entity(Position(100, 0),Hitbox(width=10, height=10))
+    target_id = esper.create_entity(Position(100, 0), Hitbox(width=10, height=10))
     enemy_id = esper.create_entity(
         AI(AIState.ATTACK),
         Targeting(range=200, distance=100, target=target_id),
         Position(0, 0),
         Velocity(0, 0),
         Speed(100),
-        Hitbox(width=10, height=10)
+        Hitbox(width=10, height=10),
     )
 
     BrainProc().process(0.016)
@@ -245,7 +241,7 @@ def test_brain_proc_chase_zero_distance(esper_world):
         Position(0, 0),
         Velocity(1, 1),
         Speed(100),
-        Hitbox(width=10, height=10)
+        Hitbox(width=10, height=10),
     )
 
     BrainProc().process(0.016)
