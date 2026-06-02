@@ -1,30 +1,32 @@
 import math
 from typing import final, override
 
-import esper
 import pygame
 from esper import Processor
 
-from client.component import PlayerTag, Speed, Velocity
+from client.view.player import PlayerView
 
 
 @final
 class InputProc(Processor):
     @override
     def process(self, _):
-        keys = pygame.key.get_pressed()
-        for _, (vel, speed, _) in esper.get_components(Velocity, Speed, PlayerTag):
-            vel.vx = 0
-            vel.vy = 0
-            if keys[pygame.K_z]:
-                vel.vy -= speed.value
-            if keys[pygame.K_s]:
-                vel.vy += speed.value
-            if keys[pygame.K_q]:
-                vel.vx -= speed.value
-            if keys[pygame.K_d]:
-                vel.vx += speed.value
+        player = PlayerView.get()
+        if player is None:
+            return
 
-            if vel.vx != 0 and vel.vy != 0:
-                vel.vx /= math.sqrt(2)
-                vel.vy /= math.sqrt(2)
+        keys = pygame.key.get_pressed()
+        player.vel.vx = 0
+        player.vel.vy = 0
+        if keys[pygame.K_z]:
+            player.vel.vy -= player.speed.value
+        if keys[pygame.K_s]:
+            player.vel.vy += player.speed.value
+        if keys[pygame.K_q]:
+            player.vel.vx -= player.speed.value
+        if keys[pygame.K_d]:
+            player.vel.vx += player.speed.value
+
+        if player.vel.vx != 0 and player.vel.vy != 0:
+            player.vel.vx /= math.sqrt(2)
+            player.vel.vy /= math.sqrt(2)

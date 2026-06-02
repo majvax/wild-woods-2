@@ -10,7 +10,10 @@ from client.component import (
     AIState,
     CampfireTag,
     EnemyTag,
+    Health,
     Hitbox,
+    Inventory,
+    Invincibility,
     ItemKind,
     LootTable,
     LootTableKind,
@@ -38,8 +41,26 @@ def esper_world():
     esper.delete_world(world_id)
 
 
+def _make_player(
+    pos: Position | None = None,
+    vel: Velocity | None = None,
+    speed: Speed | None = None,
+) -> int:
+    """Create a player entity with every component PlayerView requires."""
+    return esper.create_entity(
+        PlayerTag(),
+        pos if pos is not None else Position(0, 0),
+        vel if vel is not None else Velocity(0, 0),
+        speed if speed is not None else Speed(100),
+        Health(10, 10),
+        Inventory(),
+        Hitbox(width=10, height=10),
+        Invincibility(0),
+    )
+
+
 def test_targeting_proc_sets_target_when_in_range(esper_world):
-    player_id = esper.create_entity(PlayerTag(), Position(10, 10))
+    player_id = _make_player(Position(10, 10))
     enemy_id = esper.create_entity(EnemyTag(), Position(12, 10), Targeting(range=5))
 
     TargetingProc().process(0.016)
@@ -50,7 +71,7 @@ def test_targeting_proc_sets_target_when_in_range(esper_world):
 
 
 def test_targeting_proc_clears_target_when_out_of_range(esper_world):
-    player_id = esper.create_entity(PlayerTag(), Position(0, 0))
+    player_id = _make_player(Position(0, 0))
     enemy_id = esper.create_entity(EnemyTag(), Position(50, 0), Targeting(range=5))
 
     TargetingProc().process(0.016)
@@ -257,7 +278,7 @@ def test_input_proc_normalizes_diagonal(esper_world, monkeypatch):
     keys[pygame.K_d] = True
     monkeypatch.setattr(pygame.key, "get_pressed", lambda: keys)
 
-    ent = esper.create_entity(Velocity(0, 0), Speed(100), PlayerTag())
+    ent = _make_player()
 
     InputProc().process(0.016)
 
