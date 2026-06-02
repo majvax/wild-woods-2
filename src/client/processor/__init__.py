@@ -3,7 +3,6 @@ from .brain import BrainProc
 from .campfire import CampfireProc
 from .collision import CollisionProc
 from .damage import DamageProc
-from .hitbox import HitboxProc
 from .input import InputProc
 from .lifetime import LifetimeProc
 from .loot import LootProc

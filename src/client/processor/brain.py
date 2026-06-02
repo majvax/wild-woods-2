@@ -7,11 +7,13 @@ from client.component import (
     AI,
     AIState,
     CampfireTag,
+    Hitbox,
     Position,
     Speed,
     Targeting,
     Velocity,
-    Hitbox,
+    aabb_overlap,
+    hitbox_bounds,
 )
 
 
@@ -27,29 +29,26 @@ class BrainProc(esper.Processor):
             self._apply_movement(ai, targeting, pos, vel, speed)
 
     def _transition(self, ent: int, ai: AI, targeting: Targeting) -> None:
-        has_target = targeting.target is not None
+        target = targeting.target
 
         match ai.state:
             case AIState.IDLE:
-                if has_target:
-                    ai.state = AIState.CHASE
-                else:
-                    ai.state = AIState.PATROL
+                ai.state = AIState.CHASE if target is not None else AIState.PATROL
 
             case AIState.PATROL:
-                if has_target:
+                if target is not None:
                     ai.state = AIState.CHASE
 
             case AIState.CHASE:
-                if not has_target:
+                if target is None:
                     ai.state = AIState.PATROL
-                elif self._hitboxes_overlap(ent, targeting.target is not None):
+                elif self._hitboxes_overlap(ent, target):
                     ai.state = AIState.ATTACK
 
             case AIState.ATTACK:
-                if not has_target:
+                if target is None:
                     ai.state = AIState.PATROL
-                elif not self._hitboxes_overlap(ent, targeting.target is not None):
+                elif not self._hitboxes_overlap(ent, target):
                     ai.state = AIState.CHASE
 
             case _:
@@ -82,7 +81,7 @@ class BrainProc(esper.Processor):
         dy = target_pos.y - pos.y
         dist = math.hypot(dx, dy)
 
-        if dist == 0:  # should check TODO
+        if dist == 0:
             vel.vx = 0.0
             vel.vy = 0.0
             return
@@ -108,33 +107,12 @@ class BrainProc(esper.Processor):
         vel.vy = (dy / dist) * speed.value * 0.2
 
     def _hitboxes_overlap(self, ent: int, target: int) -> bool:
-
-        epos = esper.component_for_entity(ent, Position)
-        ehit = esper.component_for_entity(ent, Hitbox)
-        ppos = esper.component_for_entity(target, Position)
-        phit = esper.component_for_entity(target, Hitbox)
-
-        p_left, p_right = (
-            ppos.x + phit.offset_x - phit.width / 2,
-            ppos.x + phit.offset_x + phit.width / 2,
+        a = hitbox_bounds(
+            esper.component_for_entity(ent, Position),
+            esper.component_for_entity(ent, Hitbox),
         )
-        p_top, p_bottom = (
-            ppos.y + phit.offset_y - phit.height / 2,
-            ppos.y + phit.offset_y + phit.height / 2,
+        b = hitbox_bounds(
+            esper.component_for_entity(target, Position),
+            esper.component_for_entity(target, Hitbox),
         )
-
-        e_left, e_right = (
-            epos.x + ehit.offset_x - ehit.width / 2,
-            epos.x + ehit.offset_x + ehit.width / 2,
-        )
-        e_top, e_bottom = (
-            epos.y + ehit.offset_y - ehit.height / 2,
-            epos.y + ehit.offset_y + ehit.height / 2,
-        )
-
-        return (
-            e_left < p_right
-            and e_right > p_left
-            and e_top < p_bottom
-            and e_bottom > p_top
-        )
+        return aabb_overlap(a, b)

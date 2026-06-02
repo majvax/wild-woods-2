@@ -20,12 +20,15 @@ from client.core import (
     TILE_SIZE,
 )
 from client.core.engine import Engine
+from client.factory.item import ITEM_SPRITE_PATHS
 from client.processor.render_helpers import (
     Camera,
     ChunkRenderer,
     DebugOverlay,
     SnowSystem,
 )
+
+_INVENTORY_ICON_SIZE = 18
 
 
 @final
@@ -42,18 +45,11 @@ class RenderProc(Processor):
         self._engine = engine
         self.font = pygame.font.SysFont("Arial", 18)
         self._item_icons: dict[ItemKind, pygame.Surface] = {
-            ItemKind.GOLD: pygame.transform.scale(
-                pygame.image.load("assets/sprite/icons/coin.png").convert_alpha(),
-                (18, 18),
-            ),
-            ItemKind.HEALTH: pygame.transform.scale(
-                pygame.image.load("assets/sprite/icons/hearth.png").convert_alpha(),
-                (18, 18),
-            ),
-            ItemKind.LIMBS: pygame.transform.scale(
-                pygame.image.load("assets/sprite/icons/limbs.png").convert_alpha(),
-                (18, 18),
-            ),
+            kind: pygame.transform.scale(
+                pygame.image.load(path).convert_alpha(),
+                (_INVENTORY_ICON_SIZE, _INVENTORY_ICON_SIZE),
+            )
+            for kind, path in ITEM_SPRITE_PATHS.items()
         }
         width, height = self.screen.get_size()
         self._background_seed = random.randint(0, 1000)
