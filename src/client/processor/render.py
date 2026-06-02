@@ -79,6 +79,19 @@ class RenderProc(Processor):
                 )
                 hitbox_surf.fill((0, 255, 0, 120))
                 self.screen.blit(hitbox_surf, (hx, hy))
+                # exclusion zone autour du feu
+                pygame.draw.circle(
+                    self.screen,
+                    (255, 80, 0),
+                    (int(pos.x + offset_x), int(pos.y + offset_y)),
+                    700,
+                    2,
+                )
+            if player_pos is not None:
+                px = int(player_pos.x + offset_x)
+                py = int(player_pos.y + offset_y)
+                pygame.draw.circle(self.screen, (0, 180, 255), (px, py), 300, 2)
+                pygame.draw.circle(self.screen, (0, 80, 255), (px, py), 800, 2)
 
             hx = int(
                 player.pos.x

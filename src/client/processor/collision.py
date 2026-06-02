@@ -36,6 +36,10 @@ def _resolve_against_campfires(
 
 @final
 class CollisionProc(Processor):
+    def __init__(self) -> None:
+        super().__init__()
+        self._campfire_timers: dict[int, float] = {}
+
     @override
     def process(self, dt: float) -> None:
         campfires = esper.get_components(CampfireTag, Position, Hitbox)
