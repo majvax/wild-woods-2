@@ -8,6 +8,7 @@ from client.component import (
     AnimationState,
     DirectionalAnimation,
     Health,
+    Hitbox,
     Inventory,
     Invincibility,
     PlayerTag,
@@ -16,7 +17,6 @@ from client.component import (
     Sprite,
     Velocity,
     Weapon,
-    Hitbox,
 )
 
 
@@ -38,11 +38,11 @@ def create_player(pos: Position):
     clips: dict[str, AnimationClip] = {}
     for direction in directions:
         run_frames = _load_sequence(
-            f"sprite/player/standard/run/{dir_map[direction]}/{{i}}.png",
+            f"assets/sprite/player/run/{dir_map[direction]}/{{i}}.png",
             8,
         )
         idle_frames = _load_sequence(
-            f"sprite/player/standard/idle/{dir_map[direction]}/{{i}}.png", 2
+            f"assets/sprite/player/idle/{dir_map[direction]}/{{i}}.png", 2
         )
         clips[f"run_{direction}"] = AnimationClip(
             frames=run_frames, frame_duration=0.08, loop=True
@@ -51,7 +51,7 @@ def create_player(pos: Position):
             frames=idle_frames, frame_duration=0.3, loop=True
         )
 
-    death_frames = _load_sequence("sprite/player/standard/hurt/up/{i}.png", 6)
+    death_frames = _load_sequence("assets/sprite/player/hurt/up/{i}.png", 6)
     clips["death_up"] = AnimationClip(
         frames=death_frames, frame_duration=0.12, loop=False
     )

@@ -22,7 +22,7 @@ from client.component import (
 
 def create_bandit(pos: Position):
     # TODO: replace with actual bandit sprite
-    surface = pygame.image.load("sprite/ennemis/perso_079.png").convert_alpha()
+    surface = pygame.image.load("assets/sprite/ennemis/perso_079.png").convert_alpha()
     entries = [
         (ItemKind.HEALTH, 0.5),
         (ItemKind.LIMBS, 0.3),

@@ -16,11 +16,13 @@ from client.component import (
 
 def create_campfire(pos: Position, max_health: float = 100.0) -> None:
     basic_frames = [
-        pygame.image.load(f"sprite/campfire/basic/frame{i}.png").convert_alpha()
+        pygame.image.load(f"assets/sprite/campfire/basic/frame{i}.png").convert_alpha()
         for i in range(1, 6)
     ]
     low_frames = [
-        pygame.image.load(f"sprite/campfire/low-life/fire-low{i}.png").convert_alpha()
+        pygame.image.load(
+            f"assets/sprite/campfire/low-life/fire-low{i}.png"
+        ).convert_alpha()
         for i in range(1, 4)
     ]
     clips = {

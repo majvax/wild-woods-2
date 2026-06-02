@@ -24,7 +24,7 @@ class DeathProc(esper.Processor):
         self._game_over_signaled = False
 
         self.dead_image = pygame.image.load(
-            "sprite/player/standard/hurt/up/6.png"
+            "assets/sprite/player/hurt/up/6.png"
         ).convert_alpha()
 
     @override
