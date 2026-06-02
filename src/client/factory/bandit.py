@@ -3,6 +3,11 @@ import pygame
 
 from client.component import (
     AI,
+    AnimationClip,
+    AnimationRuntime,
+    AnimationSet,
+    AnimationState,
+    DirectionalAnimation,
     DamageDealer,
     EnemyTag,
     Health,
@@ -20,9 +25,35 @@ from client.component import (
 )
 
 
+def _load_sequence(path_template: str, count: int) -> list[pygame.Surface]:
+    return [
+        pygame.image.load(path_template.format(i=i)).convert_alpha()
+        for i in range(1, count + 1)
+    ]
+
+
+
 def create_bandit(pos: Position, difficulty: int = 0):
+    directions = ["up", "down", "left", "right"]
+    dir_map = {
+        "up": "up",
+        "down": "left",
+        "left": "down",
+        "right": "right",
+    }
     # TODO: replace with actual bandit sprite
-    surface = pygame.image.load("assets/sprite/ennemis/perso_079.png").convert_alpha()
+
+    clips: dict[str, AnimationClip] = {}
+    for direction in directions:
+        run_frames = _load_sequence(
+            f"assets/sprite/ennemis/run/{dir_map[direction]}/{{i}}.png",
+            9,
+        )
+        clips[f"run_{direction}"] = AnimationClip(
+            frames=run_frames, frame_duration=0.08, loop=True
+        )
+
+    surface = clips["run_down"].frames[0]
     entries = [
         (ItemKind.HEALTH, 0.5),
         (ItemKind.LIMBS, 0.3),
@@ -52,4 +83,13 @@ def create_bandit(pos: Position, difficulty: int = 0):
         PatrolSettings.from_random(),
         PatrolRuntime(),
         LootTable(LootTableKind.LOOT_ONE, entries),
+        AnimationSet(clips=clips),
+        AnimationState(current="run_down"),
+        AnimationRuntime(state="run_down", frame_index=0, frame_time=0.0),
+        DirectionalAnimation(
+            idle_prefix="idle",
+            move_prefix="run",
+            last_direction="down",
+            speed_threshold=0.01,
+        ),
     )

@@ -86,14 +86,35 @@ class GameScene(Scene):
         create_campfire(Position(0, 0 - 140))
         self._spawn_bandit_near_player()
 
+
+    def _get_player_position(self) -> Position:
+        player = PlayerView.get()
+        return player.pos
+
+    def _get_campfire_position(self) -> Position | None:
+        campfires = esper.get_components(CampfireTag, Position)
+        if campfires:
+            _, (_, pos) = campfires[0]
+            return pos
+        return None
+
     def _spawn_bandit_near_player(self) -> None:
-        player_pos = PlayerView.get().pos
-        angle = random.uniform(0, 2 * math.pi)
-        dist = random.uniform(300, 500)
-        pos = Position(
-            player_pos.x + dist * math.cos(angle), player_pos.y + dist * math.sin(angle)
-        )
-        create_bandit(pos, difficulty=self._difficulty_level)
+        player_pos = self._get_player_position()
+        campfire_pos = self._get_campfire_position()
+        for _ in range(20):
+            angle = random.uniform(0, 2 * math.pi)
+            dist = random.uniform(300, 800)
+            pos = Position(
+                player_pos.x + dist * math.cos(angle),
+                player_pos.y + dist * math.sin(angle),
+            )
+            if campfire_pos is not None:
+                dx = pos.x - campfire_pos.x
+                dy = pos.y - campfire_pos.y
+                if math.hypot(dx, dy) < 700:
+                    continue
+            create_bandit(pos)
+            return
 
     def _on_game_over(self) -> None:
         self._game_over_requested = True
