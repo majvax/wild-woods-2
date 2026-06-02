@@ -3,21 +3,16 @@ import pygame
 
 from client.component import ItemKind, ItemTag, Position, Sprite
 
-_ITEM_COLORS: dict[ItemKind, str] = {
-    ItemKind.SYRINGE: "#00e5ff",
-    ItemKind.POTION: "#ff00e5",
-    ItemKind.GOLD: "#ffde00",
+_ITEM_SPRITES: dict[ItemKind, str] = {
+    ItemKind.GOLD: "assets/sprite/icons/coin.png",
+    ItemKind.HEALTH: "assets/sprite/icons/hearth.png",
+    ItemKind.LIMBS: "assets/sprite/icons/limbs.png",
 }
 
-_ITEM_SIZES: dict[ItemKind, tuple[int, int]] = {
-    ItemKind.SYRINGE: (6, 18),
-    ItemKind.POTION: (10, 14),
-    ItemKind.GOLD: (18, 8),
-}
+_ITEM_DROP_SIZE = 20
 
 
 def create_item(pos: Position, kind: ItemKind) -> None:
-    w, h = _ITEM_SIZES[kind]
-    surface = pygame.Surface((w, h))
-    surface.fill(_ITEM_COLORS[kind])
+    raw = pygame.image.load(_ITEM_SPRITES[kind]).convert_alpha()
+    surface = pygame.transform.scale(raw, (_ITEM_DROP_SIZE, _ITEM_DROP_SIZE))
     esper.create_entity(Position(pos.x, pos.y), Sprite(surface), ItemTag(kind))

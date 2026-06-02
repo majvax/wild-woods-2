@@ -44,6 +44,20 @@ class RenderProc(Processor):
         self.screen = screen
         self._engine = engine
         self.font = pygame.font.SysFont("Arial", 18)
+        self._item_icons: dict[ItemKind, pygame.Surface] = {
+            ItemKind.GOLD: pygame.transform.scale(
+                pygame.image.load("assets/sprite/icons/coin.png").convert_alpha(),
+                (18, 18),
+            ),
+            ItemKind.HEALTH: pygame.transform.scale(
+                pygame.image.load("assets/sprite/icons/hearth.png").convert_alpha(),
+                (18, 18),
+            ),
+            ItemKind.LIMBS: pygame.transform.scale(
+                pygame.image.load("assets/sprite/icons/limbs.png").convert_alpha(),
+                (18, 18),
+            ),
+        }
         width, height = self.screen.get_size()
         self._background_seed = random.randint(0, 1000)
         self._noise_scale = 60.0
@@ -193,9 +207,14 @@ class RenderProc(Processor):
             self.screen.blit(header, (10, inv_start_y))
             y = inv_start_y + line_h
             for kind in ItemKind:
+                icon = self._item_icons.get(kind)
+                text_x = 10
+                if icon is not None:
+                    self.screen.blit(icon, (10, y + (line_h - icon.get_height()) // 2))
+                    text_x = 10 + icon.get_width() + 4
                 item_label = f"{kind.name.title()}: {inventory.count(kind)}"
                 item_text = self.font.render(item_label, True, pygame.Color("black"))
-                self.screen.blit(item_text, (10, y))
+                self.screen.blit(item_text, (text_x, y))
                 y += line_h
             break
 

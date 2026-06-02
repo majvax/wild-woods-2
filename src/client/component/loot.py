@@ -3,8 +3,8 @@ from enum import IntEnum, auto
 
 
 class ItemKind(IntEnum):
-    SYRINGE = auto()
-    POTION = auto()
+    HEALTH = auto()
+    LIMBS = auto()
     GOLD = auto()
 
 

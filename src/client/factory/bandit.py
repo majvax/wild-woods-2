@@ -6,6 +6,7 @@ from client.component import (
     DamageDealer,
     EnemyTag,
     Health,
+    Hitbox,
     ItemKind,
     LootTable,
     LootTableKind,
@@ -16,7 +17,6 @@ from client.component import (
     Sprite,
     Targeting,
     Velocity,
-    Hitbox,
 )
 
 
@@ -24,8 +24,8 @@ def create_bandit(pos: Position):
     # TODO: replace with actual bandit sprite
     surface = pygame.image.load("sprite/ennemis/perso_079.png").convert_alpha()
     entries = [
-        (ItemKind.SYRINGE, 0.5),
-        (ItemKind.POTION, 0.3),
+        (ItemKind.HEALTH, 0.5),
+        (ItemKind.LIMBS, 0.3),
         (ItemKind.GOLD, 0.2),
     ]
 
