@@ -81,7 +81,7 @@ class GameScene(Scene):
         cx, cy = chunk_world_size / 2, chunk_world_size / 2
         create_player(Position(cx, cy))
         create_campfire(Position(cx, cy))
-        self._spawn_bandit_near_campfire()
+        self._spawn_bandit_near_player()
 
     def _get_player_position(self) -> Position:
         players = esper.get_components(PlayerTag, Position)
@@ -90,7 +90,7 @@ class GameScene(Scene):
             return pos
         return Position(0, 0)
 
-    def _spawn_bandit_near_campfire(self) -> None:
+    def _spawn_bandit_near_player(self) -> None:
         player_pos = self._get_player_position()
         angle = random.uniform(0, 2 * math.pi)
         dist = random.uniform(300, 500)
@@ -117,11 +117,11 @@ class GameScene(Scene):
                     for _, (_, health) in esper.get_components(CampfireTag, Health):
                         health.current = max(0.0, health.current - 10.0)
 
-        # Spawn bandits every 5 seconds
+        # Spawn bandits near player every 5 seconds
         self._timer += dt
 
         if self._timer > 4:
-            self._spawn_bandit_near_campfire()
+            self._spawn_bandit_near_player()
             self._timer = 0
 
         esper.process(dt)
