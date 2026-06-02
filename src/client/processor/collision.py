@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import final, override
 
 import esper
@@ -8,17 +8,17 @@ from client.component import (
     CampfireTag,
     EnemyTag,
     Hitbox,
-    PlayerTag,
     Position,
     hitbox_bounds,
 )
+from client.view.player import PlayerView
 
 
 def _resolve_against_campfires(
-    movables: Sequence[tuple[int, tuple[object, Position, Hitbox]]],
+    movables: Iterable[tuple[Position, Hitbox]],
     campfires: Sequence[tuple[int, tuple[object, Position, Hitbox]]],
 ) -> None:
-    for _, (_, m_pos, m_hit) in movables:
+    for m_pos, m_hit in movables:
         for _, (_, c_pos, c_hit) in campfires:
             ml, mt, mr, mb = hitbox_bounds(m_pos, m_hit)
             cl, ct, cr, cb = hitbox_bounds(c_pos, c_hit)
@@ -42,9 +42,12 @@ class CollisionProc(Processor):
         if not campfires:
             return
 
-        _resolve_against_campfires(
-            esper.get_components(PlayerTag, Position, Hitbox), campfires
+        player = PlayerView.get()
+        if player is not None:
+            _resolve_against_campfires([(player.pos, player.hitbox)], campfires)
+
+        enemies = (
+            (e_pos, e_hit)
+            for _, (_, e_pos, e_hit) in esper.get_components(EnemyTag, Position, Hitbox)
         )
-        _resolve_against_campfires(
-            esper.get_components(EnemyTag, Position, Hitbox), campfires
-        )
+        _resolve_against_campfires(enemies, campfires)

@@ -5,9 +5,10 @@ from typing import cast, final, override
 import esper
 import pygame
 
-from client.component import CampfireTag, Health, PlayerTag, Position
+from client.component import CampfireTag, Health, Position
 from client.core import CHUNK_SIZE_TILES, TILE_SIZE, Engine
 from client.factory import create_bandit, create_campfire, create_player
+from client.view.player import PlayerView
 from client.processor import (
     AnimationProc,
     BrainProc,
@@ -84,11 +85,8 @@ class GameScene(Scene):
         self._spawn_bandit_near_player()
 
     def _get_player_position(self) -> Position:
-        players = esper.get_components(PlayerTag, Position)
-        if players:
-            _, (_, pos) = players[0]
-            return pos
-        return Position(0, 0)
+        player = PlayerView.get()
+        return player.pos if player else Position(0, 0)
 
     def _spawn_bandit_near_player(self) -> None:
         player_pos = self._get_player_position()

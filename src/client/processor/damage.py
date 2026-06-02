@@ -8,15 +8,13 @@ from client.component import (
     EnemyTag,
     Health,
     Hitbox,
-    Invincibility,
-    PlayerTag,
     Position,
     ProjectileTag,
     aabb_overlap,
     hitbox_bounds,
 )
 from client.core.spatial import SpatialGrid, get_active_grid
-from client.utils.ecs import get_components
+from client.view.player import PlayerView
 
 _INVINCIBILITY_AFTER_HIT = 1.0
 
@@ -42,17 +40,16 @@ class DamageProc(esper.Processor):
         self._projectiles_damage_enemies()
 
     def _enemies_damage_player(self, dt: float) -> None:
-        players = get_components(PlayerTag, Position, Health, Invincibility, Hitbox)
-        if not players:
-            return
-        p_ent, (_, ppos, php, pinv, phit) = players[0]
-
-        pinv.time -= dt
-        if pinv.time > 0:
+        player = PlayerView.get()
+        if player is None:
             return
 
-        p_bounds = hitbox_bounds(ppos, phit)
-        for ent in _aabb_candidates(get_active_grid(), p_bounds, p_ent):
+        player.invincibility.time -= dt
+        if player.invincibility.time > 0:
+            return
+
+        p_bounds = hitbox_bounds(player.pos, player.hitbox)
+        for ent in _aabb_candidates(get_active_grid(), p_bounds, player.ent):
             try:
                 edmg = esper.component_for_entity(ent, DamageDealer)
                 ehit = esper.component_for_entity(ent, Hitbox)
@@ -62,8 +59,8 @@ class DamageProc(esper.Processor):
                 continue
 
             if aabb_overlap(p_bounds, hitbox_bounds(epos, ehit)):
-                php.current -= edmg.amount
-                pinv.time = _INVINCIBILITY_AFTER_HIT
+                player.hp.current -= edmg.amount
+                player.invincibility.time = _INVINCIBILITY_AFTER_HIT
                 return
 
     def _projectiles_damage_enemies(self) -> None:
