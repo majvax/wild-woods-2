@@ -70,9 +70,11 @@ class PauseScene(Scene):
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
-                    self._resume()
+            if event.type != pygame.KEYDOWN:
+                continue
+            key = cast(int, event.key)
+            if key in (pygame.K_ESCAPE, pygame.K_p):
+                self._resume()
 
         for btn in (self._btn_resume, self._btn_quit):
             btn.update(dt, events)

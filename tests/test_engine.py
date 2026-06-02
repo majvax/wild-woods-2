@@ -10,7 +10,7 @@ def test_engine_stop_sets_code(monkeypatch):
     monkeypatch.setattr(pygame.display, "set_mode", lambda *_: pygame.Surface((10, 10)))
     monkeypatch.setattr(esper, "set_handler", lambda *_: None)
 
-    Engine._scene_manger = SceneManager()
+    Engine._scene_manager = SceneManager()
     engine = Engine()
 
     engine.stop(code=StopCode.ERROR)
@@ -35,7 +35,7 @@ def test_engine_run_handles_quit(monkeypatch):
     quit_event = pygame.event.Event(pygame.QUIT)
     monkeypatch.setattr(pygame.event, "get", lambda: [quit_event])
 
-    Engine._scene_manger = SceneManager()
+    Engine._scene_manager = SceneManager()
     engine = Engine()
 
     assert called["event"] == EngineEvent.STOP
