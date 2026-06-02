@@ -19,11 +19,7 @@ class Engine:
     _is_running: bool = True
     _is_initialized: bool = False
     _stop_code: StopCode = StopCode.NORMAL
-    _scene_manger: SceneManager = SceneManager()
-    _clock: pygame.time.Clock = pygame.time.Clock()
     _screen: pygame.Surface
-    _snow_enabled: bool = False
-    _snow_paused: bool = False
     _debug_enabled: bool = False
     _debug_paused: bool = False
     _debug_step_requested: bool = False
@@ -47,24 +43,12 @@ class Engine:
             (0, 0), pygame.FULLSCREEN | pygame.DOUBLEBUF
         )
         esper.set_handler(EngineEvent.STOP, self.stop)
+        self._scene_manger: SceneManager = SceneManager()
+        self._clock: pygame.time.Clock = pygame.time.Clock()
 
     def stop(self, *, code: StopCode = StopCode.NORMAL):
         self._is_running = False
         self._stop_code = code
-
-    @property
-    def snow_enabled(self) -> bool:
-        return self._snow_enabled
-
-    @property
-    def snow_paused(self) -> bool:
-        return self._snow_paused
-
-    def set_snow_enabled(self, enabled: bool) -> None:
-        self._snow_enabled = enabled
-
-    def set_snow_paused(self, paused: bool) -> None:
-        self._snow_paused = paused
 
     @property
     def debug_enabled(self) -> bool:

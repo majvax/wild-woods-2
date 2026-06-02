@@ -30,5 +30,4 @@ __all__ = [
     "ShootingProc",
     "SpatialGridProc",
     "LifetimeProc",
-    "HitboxProc",
 ]
