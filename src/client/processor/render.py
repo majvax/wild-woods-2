@@ -112,7 +112,7 @@ class RenderProc(Processor):
                 offset_y,
                 color=pygame.Color(255, 0, 255),
             )
-        self._update_snow_state(player_pos)
+
         for _, (pos, sprite) in esper.get_components(Position, Sprite):
             self.screen.blit(
                 sprite.surface,
@@ -133,11 +133,6 @@ class RenderProc(Processor):
                 )
                 hitbox_surf.fill((0, 255, 0, 120))
                 self.screen.blit(hitbox_surf, (hx, hy))
-
-        if self._engine.snow_enabled:
-            if not self._engine.snow_paused:
-                self._snow.update(dt, width, height, self._camera.x, self._camera.y)
-            self._snow.draw(self.screen, offset_x, offset_y)
 
         _, (_, php) = esper.get_components(PlayerTag, Health)[0]
         fps = int(1.0 / dt) if dt > 0 else 0
@@ -207,6 +202,3 @@ class RenderProc(Processor):
                 self.screen.blit(item_text, (text_x, y))
                 y += line_h
             break
-
-    def _update_snow_state(self, _player_pos: Position | None) -> None:
-        self._engine.set_snow_enabled(False)
