@@ -43,8 +43,8 @@ class Engine:
             (0, 0), pygame.FULLSCREEN | pygame.DOUBLEBUF
         )
         esper.set_handler(EngineEvent.STOP, self.stop)
-        self._scene_manger: SceneManager = SceneManager()
-        self._clock: pygame.time.Clock = pygame.time.Clock()
+        self._scene_manger = SceneManager()
+        self._clock = pygame.time.Clock()
 
     def stop(self, *, code: StopCode = StopCode.NORMAL):
         self._is_running = False

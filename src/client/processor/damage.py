@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from typing import final, override
 
 import esper
@@ -14,9 +15,22 @@ from client.component import (
     aabb_overlap,
     hitbox_bounds,
 )
-from client.core.spatial import get_active_grid
+from client.core.spatial import SpatialGrid, get_active_grid
 
 _INVINCIBILITY_AFTER_HIT = 1.0
+
+
+def _aabb_candidates(
+    grid: SpatialGrid,
+    bounds: tuple[float, float, float, float],
+    exclude_ent: int,
+) -> Iterator[int]:
+    seen: set[int] = set()
+    for ent in grid.query_aabb(*bounds):
+        if ent == exclude_ent or ent in seen:
+            continue
+        seen.add(ent)
+        yield ent
 
 
 @final
@@ -38,10 +52,7 @@ class DamageProc(esper.Processor):
 
         phit = esper.component_for_entity(p_ent, Hitbox)
         p_bounds = hitbox_bounds(ppos, phit)
-        grid = get_active_grid()
-        for ent in grid.query_aabb(*p_bounds):
-            if ent == p_ent:
-                continue
+        for ent in _aabb_candidates(get_active_grid(), p_bounds, p_ent):
             try:
                 edmg = esper.component_for_entity(ent, DamageDealer)
                 ehit = esper.component_for_entity(ent, Hitbox)
@@ -62,9 +73,7 @@ class DamageProc(esper.Processor):
             ProjectileTag, Position, DamageDealer, Hitbox
         ):
             b_bounds = hitbox_bounds(bpos, bhit)
-            for ent in grid.query_aabb(*b_bounds):
-                if ent == b_ent:
-                    continue
+            for ent in _aabb_candidates(grid, b_bounds, b_ent):
                 try:
                     ehp = esper.component_for_entity(ent, Health)
                     ehit = esper.component_for_entity(ent, Hitbox)

@@ -1,38 +1,40 @@
 from typing import final, override
 
 import esper
-import pygame
 from esper import Processor
 
-from client.component import Inventory, ItemTag, PlayerTag, Position, Sprite
+from client.component import (
+    Hitbox,
+    Inventory,
+    ItemTag,
+    PlayerTag,
+    Position,
+    aabb_overlap,
+    hitbox_bounds,
+)
 
 
 @final
 class PickupProc(Processor):
     @override
     def process(self, dt: float) -> None:
-        players = list(esper.get_components(PlayerTag, Position, Sprite, Inventory))
+        players = esper.get_components(PlayerTag, Position, Hitbox, Inventory)
         if not players:
             return
 
-        items = list(esper.get_components(ItemTag, Position, Sprite))
+        items = esper.get_components(ItemTag, Position, Hitbox)
         if not items:
             return
 
-        picked_items: set[int] = set()
-        for _, (_, ppos, psprite, inventory) in players:
-            pw = psprite.surface.get_width()
-            ph = psprite.surface.get_height()
-            player_rect = pygame.Rect(ppos.x - pw / 2, ppos.y - ph / 2, pw, ph)
-            for item_ent, (item_tag, ipos, isprite) in items:
-                if item_ent in picked_items:
+        picked: set[int] = set()
+        for _, (_, ppos, phit, inventory) in players:
+            p_bounds = hitbox_bounds(ppos, phit)
+            for item_ent, (item_tag, ipos, ihit) in items:
+                if item_ent in picked:
                     continue
-                iw = isprite.surface.get_width()
-                ih = isprite.surface.get_height()
-                item_rect = pygame.Rect(ipos.x - iw / 2, ipos.y - ih / 2, iw, ih)
-                if player_rect.colliderect(item_rect):
+                if aabb_overlap(p_bounds, hitbox_bounds(ipos, ihit)):
                     inventory.add(item_tag.kind)
-                    picked_items.add(item_ent)
+                    picked.add(item_ent)
 
-        for item_ent in picked_items:
+        for item_ent in picked:
             esper.delete_entity(item_ent)
