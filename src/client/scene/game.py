@@ -109,13 +109,15 @@ class GameScene(Scene):
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if cast(int, event.key) in (pygame.K_ESCAPE, pygame.K_p):
-                    self._engine.sm.push(PauseScene, self._engine)
-                    return True
-                if cast(int, event.key) == pygame.K_m:
-                    for _, (_, health) in esper.get_components(CampfireTag, Health):
-                        health.current = max(0.0, health.current - 10.0)
+            if event.type != pygame.KEYDOWN:
+                continue
+            key = cast(int, event.key)
+            if key in (pygame.K_ESCAPE, pygame.K_p):
+                self._engine.sm.push(PauseScene, self._engine)
+                return True
+            if key == pygame.K_m:
+                for _, (_, health) in esper.get_components(CampfireTag, Health):
+                    health.current = max(0.0, health.current - 10.0)
 
         # Spawn bandits near player every 4 seconds
         self._timer += dt

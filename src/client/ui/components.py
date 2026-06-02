@@ -80,11 +80,9 @@ class Button:
         self._press_t = max(0.0, self._press_t - speed * 2 * dt)
 
         for event in events:
-            if (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and cast(int, event.button) == 1
-                and hovered
-            ):
+            if event.type != pygame.MOUSEBUTTONDOWN:
+                continue
+            if cast(int, event.button) == 1 and hovered:
                 self._press_t = 1.0  # Déclenche l'animation de pression
                 if self.on_click:
                     self.on_click()
@@ -169,11 +167,9 @@ class ToggleSwitch:
         self._slide_t += (target - self._slide_t) * min(1.0, speed * 2 * dt)
 
         for event in events:
-            if (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and cast(int, event.button) == 1
-                and hovered
-            ):
+            if event.type != pygame.MOUSEBUTTONDOWN:
+                continue
+            if cast(int, event.button) == 1 and hovered:
                 self.value = not self.value
                 if self.on_toggle:
                     self.on_toggle(self.value)
