@@ -76,11 +76,7 @@ class Engine:
             elif key == pygame.K_RCTRL and self._debug_enabled:
                 self._debug_paused = not self._debug_paused
                 self._debug_step_requested = False
-            elif (
-                key == pygame.K_RIGHT
-                and self._debug_enabled
-                and self._debug_paused
-            ):
+            elif key == pygame.K_RIGHT and self._debug_enabled and self._debug_paused:
                 self._debug_step_requested = True
 
     def _resolve_dt(self, dt: float) -> float:
