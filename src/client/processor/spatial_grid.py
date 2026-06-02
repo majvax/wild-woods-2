@@ -2,7 +2,7 @@ from typing import final, override
 
 import esper
 
-from client.component import Hitbox, Position
+from client.component import Hitbox, Position, hitbox_bounds
 from client.core.spatial import get_active_grid
 
 
@@ -17,8 +17,4 @@ class SpatialGridProc(esper.Processor):
     def process(self, dt: float) -> None:
         self._grid.clear()
         for ent, (pos, hit) in esper.get_components(Position, Hitbox):
-            left = pos.x + hit.offset_x - hit.width / 2
-            right = pos.x + hit.offset_x + hit.width / 2
-            top = pos.y + hit.offset_y - hit.height / 2
-            bottom = pos.y + hit.offset_y + hit.height / 2
-            self._grid.insert_aabb(ent, left, top, right, bottom)
+            self._grid.insert_aabb(ent, *hitbox_bounds(pos, hit))

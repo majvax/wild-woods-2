@@ -9,7 +9,7 @@ from .gameplay import (
     Lifetime,
     Sprite,
 )
-from .hitbox import Hitbox
+from .hitbox import Hitbox, aabb_overlap, hitbox_bounds
 from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
 from .physics import Orientation, Position, Speed, Velocity
 from .tags import CampfireTag, EnemyTag, PlayerTag, ProjectileTag
@@ -47,4 +47,6 @@ __all__ = [
     "Weapon",
     "Lifetime",
     "Hitbox",
+    "hitbox_bounds",
+    "aabb_overlap",
 ]
