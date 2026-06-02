@@ -16,6 +16,7 @@ from client.component import (
     hitbox_bounds,
 )
 from client.core.spatial import SpatialGrid, get_active_grid
+from client.utils.ecs import get_components
 
 _INVINCIBILITY_AFTER_HIT = 1.0
 
@@ -41,16 +42,17 @@ class DamageProc(esper.Processor):
         self._projectiles_damage_enemies()
 
     def _enemies_damage_player(self, dt: float) -> None:
-        players = esper.get_components(PlayerTag, Position, Health, Invincibility)
+        players = get_components(
+            PlayerTag, Position, Health, Invincibility, Hitbox
+        )
         if not players:
             return
-        p_ent, (_, ppos, php, pinv) = players[0]
+        p_ent, (_, ppos, php, pinv, phit) = players[0]
 
         pinv.time -= dt
         if pinv.time > 0:
             return
 
-        phit = esper.component_for_entity(p_ent, Hitbox)
         p_bounds = hitbox_bounds(ppos, phit)
         for ent in _aabb_candidates(get_active_grid(), p_bounds, p_ent):
             try:

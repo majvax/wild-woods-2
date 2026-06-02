@@ -24,12 +24,12 @@ class Engine:
         esper.set_handler(EngineEvent.STOP, self.stop)
         self._scene_manager = SceneManager()
         self._clock = pygame.time.Clock()
-        self._is_running: bool = True
-        self._stop_code: StopCode = StopCode.NORMAL
-        self._debug_enabled: bool = False
-        self._debug_paused: bool = False
-        self._debug_step_requested: bool = False
-        self._debug_step_dt: float = 1 / 60
+        self._is_running = True
+        self._stop_code = StopCode.NORMAL
+        self._debug_enabled = False
+        self._debug_paused = False
+        self._debug_step_requested = False
+        self._debug_step_dt = 1 / 60
 
     @property
     def is_running(self) -> bool:

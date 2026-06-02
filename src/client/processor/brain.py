@@ -15,16 +15,16 @@ from client.component import (
     aabb_overlap,
     hitbox_bounds,
 )
+from client.utils.ecs import get_components
 
 
 @final
 class BrainProc(esper.Processor):
     @override
     def process(self, dt: float):
-        for ent, (ai, targeting, pos, vel) in esper.get_components(
-            AI, Targeting, Position, Velocity
+        for ent, (ai, targeting, pos, vel, speed) in get_components(
+            AI, Targeting, Position, Velocity, Speed
         ):
-            speed = esper.component_for_entity(ent, Speed)
             self._transition(ent, ai, targeting)
             self._apply_movement(ai, targeting, pos, vel, speed)
 
