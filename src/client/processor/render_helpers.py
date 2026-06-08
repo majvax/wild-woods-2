@@ -4,13 +4,14 @@ import random
 import threading
 from collections import OrderedDict, deque
 from dataclasses import dataclass
-from typing import Callable, final
+from typing import final
 
 import esper
 import pygame
 
 from client.component import AnimationState, PlayerTag, Position, Velocity
 from client.core.engine import Engine
+from client.core import get_bg_data
 
 
 @dataclass
@@ -107,27 +108,18 @@ class ChunkRenderer:
         noise_scale: float,
         prewarm_margin: int,
         max_cache: int,
-        get_tile_color: Callable[[int, int, int, float], tuple[int, int, int]],
-        get_tile_biome: Callable[[int, int, int, float], str] | None = None,
-        color_for_biome: Callable[[str], tuple[int, int, int]] | None = None,
     ) -> None:
         self._tile_size = tile_size
         self._chunk_size = chunk_size
         self._seed = seed
         self._noise_scale = noise_scale
         self._prewarm_margin = prewarm_margin
-        self._get_tile_color = get_tile_color
         self._max_cache = max_cache
-        self._get_tile_biome = get_tile_biome
-        self._color_for_biome = color_for_biome
         self._cache: "OrderedDict[tuple[int, int], pygame.Surface]" = OrderedDict()
-        self._biome_cache: dict[tuple[int, int], list[list[str]]] = {}
         self._scheduled: set[tuple[int, int]] = set()
         self._prewarm_queue: deque[tuple[int, int]] = deque()
         self._completed_count = 0
-        self._ready_queue: queue.Queue[
-            tuple[int, int, list[list[tuple[int, int, int]]], list[list[str]] | None]
-        ] = queue.Queue()
+        self._ready_queue: queue.Queue[tuple[int, int]] = queue.Queue()
         self._worker_thread = threading.Thread(
             target=self._prewarm_worker, name="chunk-prewarm", daemon=True
         )
@@ -199,25 +191,11 @@ class ChunkRenderer:
     def pump_ready(self, max_per_frame: int) -> None:
         for _ in range(max_per_frame):
             try:
-                chunk_x, chunk_y, colors, biomes = self._ready_queue.get_nowait()
+                chunk_x, chunk_y = self._ready_queue.get_nowait()
             except queue.Empty:
                 break
-            surface = pygame.Surface((self.chunk_world_size, self.chunk_world_size))
-            for local_y, row in enumerate(colors):
-                for local_x, color in enumerate(row):
-                    pygame.draw.rect(
-                        surface,
-                        color,
-                        (
-                            local_x * self._tile_size,
-                            local_y * self._tile_size,
-                            self._tile_size,
-                            self._tile_size,
-                        ),
-                    )
+            surface = self._render_chunk(chunk_x, chunk_y)
             self._insert_cache((chunk_x, chunk_y), surface)
-            if biomes is not None:
-                self._biome_cache[(chunk_x, chunk_y)] = biomes
             self._scheduled.discard((chunk_x, chunk_y))
             self._completed_count += 1
 
@@ -231,58 +209,19 @@ class ChunkRenderer:
             if (chunk_x, chunk_y) in self._cache:
                 self._scheduled.discard((chunk_x, chunk_y))
                 continue
-            colors, biomes = self._compute_chunk_colors(chunk_x, chunk_y)
-            self._ready_queue.put((chunk_x, chunk_y, colors, biomes))
-
-    def _compute_chunk_colors(
-        self, chunk_x: int, chunk_y: int
-    ) -> tuple[list[list[tuple[int, int, int]]], list[list[str]] | None]:
-        colors: list[list[tuple[int, int, int]]] = []
-        biomes: list[list[str]] | None = (
-            [] if self._get_tile_biome and self._color_for_biome else None
-        )
-        start_tile_x = chunk_x * self._chunk_size
-        start_tile_y = chunk_y * self._chunk_size
-        for local_y in range(self._chunk_size):
-            row: list[tuple[int, int, int]] = []
-            biome_row: list[str] | None = [] if biomes is not None else None
-            for local_x in range(self._chunk_size):
-                tile_x = start_tile_x + local_x
-                tile_y = start_tile_y + local_y
-                if self._get_tile_biome and self._color_for_biome:
-                    biome = self._get_tile_biome(
-                        tile_x, tile_y, self._seed, self._noise_scale
-                    )
-                    color = self._color_for_biome(biome)
-                    if biome_row is not None:
-                        biome_row.append(biome)
-                else:
-                    color = self._get_tile_color(
-                        tile_x, tile_y, self._seed, self._noise_scale
-                    )
-                row.append(color)
-            colors.append(row)
-            if biomes is not None and biome_row is not None:
-                biomes.append(biome_row)
-        return colors, biomes
+            self._ready_queue.put((chunk_x, chunk_y))
 
     def _render_chunk(self, chunk_x: int, chunk_y: int) -> pygame.Surface:
-        colors, biomes = self._compute_chunk_colors(chunk_x, chunk_y)
+        img, w, h = get_bg_data()
         surface = pygame.Surface((self.chunk_world_size, self.chunk_world_size))
-        for local_y, row in enumerate(colors):
-            for local_x, color in enumerate(row):
-                pygame.draw.rect(
-                    surface,
-                    color,
-                    (
-                        local_x * self._tile_size,
-                        local_y * self._tile_size,
-                        self._tile_size,
-                        self._tile_size,
-                    ),
-                )
-        if biomes is not None:
-            self._biome_cache[(chunk_x, chunk_y)] = biomes
+        start_x = (chunk_x * self.chunk_world_size) % w  # pos de depart du chunk
+        start_y = (chunk_y * self.chunk_world_size) % h
+        surface.blit(
+            img, (-start_x, -start_y)
+        )  # créer 4x l'image pour etre sur de remplir tous le chunk
+        surface.blit(img, (-start_x + w, -start_y))
+        surface.blit(img, (-start_x, -start_y + h))
+        surface.blit(img, (-start_x + w, -start_y + h))
         return surface
 
     def _insert_cache(self, key: tuple[int, int], surface: pygame.Surface) -> None:
@@ -293,7 +232,6 @@ class ChunkRenderer:
             self._cache[key] = surface
         while len(self._cache) > self._max_cache:
             evicted_key, _ = self._cache.popitem(last=False)
-            self._biome_cache.pop(evicted_key, None)
             self._scheduled.discard(evicted_key)
 
     def _get_chunk(self, chunk_x: int, chunk_y: int) -> pygame.Surface:
@@ -305,20 +243,6 @@ class ChunkRenderer:
         surface = self._render_chunk(chunk_x, chunk_y)
         self._insert_cache(key, surface)
         return surface
-
-    def get_biome_for_tile(self, tile_x: int, tile_y: int) -> str | None:
-        if not self._get_tile_biome:
-            return None
-        chunk_x = math.floor(tile_x / self._chunk_size)
-        chunk_y = math.floor(tile_y / self._chunk_size)
-        cached = self._biome_cache.get((chunk_x, chunk_y))
-        if cached is None:
-            return self._get_tile_biome(tile_x, tile_y, self._seed, self._noise_scale)
-        local_x = tile_x - chunk_x * self._chunk_size
-        local_y = tile_y - chunk_y * self._chunk_size
-        if 0 <= local_y < len(cached) and 0 <= local_x < len(cached[0]):
-            return cached[local_y][local_x]
-        return self._get_tile_biome(tile_x, tile_y, self._seed, self._noise_scale)
 
     def get_visible_chunk_range(
         self, width: int, height: int, offset_x: float, offset_y: float
@@ -365,8 +289,8 @@ class ChunkRenderer:
         )
         for chunk_y in range(start_chunk_y, end_chunk_y + 1):
             for chunk_x in range(start_chunk_x, end_chunk_x + 1):
-                screen_x = chunk_x * self.chunk_world_size + offset_x
-                screen_y = chunk_y * self.chunk_world_size + offset_y
+                screen_x = math.floor(chunk_x * self.chunk_world_size + offset_x)
+                screen_y = math.floor(chunk_y * self.chunk_world_size + offset_y)
                 pygame.draw.rect(
                     screen,
                     color,
@@ -383,13 +307,11 @@ class DebugOverlay:
         engine: Engine,
         chunk_renderer: ChunkRenderer,
         tile_size: int,
-        get_tile_biome: Callable[[int, int, int, float], str],
     ) -> None:
         self._font = font
         self._engine = engine
         self._chunk_renderer = chunk_renderer
         self._tile_size = tile_size
-        self._get_tile_biome = get_tile_biome
 
     def draw(
         self,
@@ -403,8 +325,8 @@ class DebugOverlay:
         offset_y: float,
         camera_x: float,
         camera_y: float,
-        background_seed: int,
-        noise_scale: float,
+        _background_seed: int,
+        _noise_scale: float,
         player_pos: Position | None,
     ) -> None:
         if not self._engine.debug_enabled:
@@ -453,11 +375,8 @@ class DebugOverlay:
             tile_y = math.floor(player_pos.y / self._tile_size)
             chunk_x = math.floor(player_pos.x / self._chunk_renderer.chunk_world_size)
             chunk_y = math.floor(player_pos.y / self._chunk_renderer.chunk_world_size)
-            biome = self._chunk_renderer.get_biome_for_tile(tile_x, tile_y)
-            if biome is None:
-                biome = self._get_tile_biome(
-                    tile_x, tile_y, background_seed, noise_scale
-                )
+
+            biome = "Plains (Image)"
             lines.append(
                 f"Player: ({player_pos.x:.1f}, {player_pos.y:.1f}) "
                 + f"vel=({player_vel.vx:.1f}, {player_vel.vy:.1f})"

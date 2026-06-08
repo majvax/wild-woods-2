@@ -1,6 +1,6 @@
 import random
 from typing import final, override
-
+import math
 import esper
 import pygame
 from esper import Processor
@@ -18,9 +18,6 @@ from client.component import (
 from client.core import (
     CHUNK_SIZE_TILES,
     TILE_SIZE,
-    color_for_biome,
-    get_tile_biome,
-    get_tile_color,
 )
 from client.core.engine import Engine
 from client.processor.render_helpers import (
@@ -73,9 +70,6 @@ class RenderProc(Processor):
                 noise_scale=self._noise_scale,
                 prewarm_margin=5,
                 max_cache=4000,
-                get_tile_color=get_tile_color,
-                get_tile_biome=get_tile_biome,
-                color_for_biome=color_for_biome,
             )
             self._chunks.schedule_prewarm(
                 width, height, center_chunk=self._last_prewarm_center
@@ -84,13 +78,12 @@ class RenderProc(Processor):
             self._chunks = chunk_renderer
             self._background_seed = chunk_renderer.seed
             self._noise_scale = chunk_renderer.noise_scale
-        self._debug_overlay = DebugOverlay(
-            font=self.font,
-            engine=self._engine,
-            chunk_renderer=self._chunks,
-            tile_size=TILE_SIZE,
-            get_tile_biome=get_tile_biome,
-        )
+            self._debug_overlay = DebugOverlay(
+                font=self.font,
+                engine=self._engine,
+                chunk_renderer=self._chunks,
+                tile_size=TILE_SIZE,
+            )
 
     @override
     def process(self, dt: float):
@@ -102,8 +95,8 @@ class RenderProc(Processor):
 
         if player_pos is not None:
             current_chunk = (
-                int(player_pos.x // (CHUNK_SIZE_TILES * TILE_SIZE)),
-                int(player_pos.y // (CHUNK_SIZE_TILES * TILE_SIZE)),
+                math.floor(player_pos.x / (CHUNK_SIZE_TILES * TILE_SIZE)),
+                math.floor(player_pos.y / (CHUNK_SIZE_TILES * TILE_SIZE)),
             )
             if current_chunk != self._last_prewarm_center:
                 self._last_prewarm_center = current_chunk
@@ -218,18 +211,5 @@ class RenderProc(Processor):
                 y += line_h
             break
 
-    def _update_snow_state(self, player_pos: Position | None) -> None:
-        if player_pos is None:
-            self._engine.set_snow_enabled(False)
-            return
-
-        tile_x = int(player_pos.x // TILE_SIZE)
-        tile_y = int(player_pos.y // TILE_SIZE)
-        biome = self._chunks.get_biome_for_tile(tile_x, tile_y)
-        if biome is None:
-            biome = get_tile_biome(
-                tile_x, tile_y, self._background_seed, self._noise_scale
-            )
-        self._engine.set_snow_enabled(biome in {"snow", "mountain"})
-        if self._engine.snow_enabled:
-            self._engine.set_snow_paused(False)
+    def _update_snow_state(self, _player_pos: Position | None) -> None:
+        self._engine.set_snow_enabled(False)
