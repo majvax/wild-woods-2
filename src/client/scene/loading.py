@@ -7,9 +7,6 @@ from client.core import (
     CHUNK_SIZE_TILES,
     TILE_SIZE,
     Engine,
-    color_for_biome,
-    get_tile_biome,
-    get_tile_color,
 )
 from client.processor.render_helpers import ChunkRenderer
 from client.scene.game import GameScene
@@ -34,9 +31,6 @@ class LoadingScene(Scene):
             noise_scale=self._noise_scale,
             prewarm_margin=20,
             max_cache=3000,
-            get_tile_color=get_tile_color,
-            get_tile_biome=get_tile_biome,
-            color_for_biome=color_for_biome,
         )
         width, height = self._screen.get_size()
         self._target = self._chunks.schedule_prewarm(
