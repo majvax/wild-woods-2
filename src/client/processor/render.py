@@ -78,12 +78,13 @@ class RenderProc(Processor):
             self._chunks = chunk_renderer
             self._background_seed = chunk_renderer.seed
             self._noise_scale = chunk_renderer.noise_scale
-            self._debug_overlay = DebugOverlay(
-                font=self.font,
-                engine=self._engine,
-                chunk_renderer=self._chunks,
-                tile_size=TILE_SIZE,
-            )
+
+        self._debug_overlay = DebugOverlay(
+            font=self.font,
+            engine=self._engine,
+            chunk_renderer=self._chunks,
+            tile_size=TILE_SIZE,
+        )
 
     @override
     def process(self, dt: float):
