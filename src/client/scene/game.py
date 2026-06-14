@@ -117,7 +117,7 @@ class GameScene(Scene):
                     for _, (_, health) in esper.get_components(CampfireTag, Health):
                         health.current = max(0.0, health.current - 10.0)
 
-        # Spawn bandits near player every 5 seconds
+        # Spawn bandits near player every 4 seconds
         self._timer += dt
 
         if self._timer > 4:
