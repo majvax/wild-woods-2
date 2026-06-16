@@ -20,7 +20,7 @@ from client.component import (
 )
 
 
-def create_bandit(pos: Position):
+def create_bandit(pos: Position, difficulty: int = 0):
     # TODO: replace with actual bandit sprite
     surface = pygame.image.load("assets/sprite/ennemis/perso_079.png").convert_alpha()
     entries = [
@@ -36,8 +36,8 @@ def create_bandit(pos: Position):
     esper.create_entity(
         pos,
         Velocity(0, 0),
-        Speed(200),
-        Health(20, 20),
+        Speed(200 + difficulty * 5),
+        Health(10 + difficulty * 2, 10 + difficulty * 2),
         DamageDealer(amount=1.0),
         Sprite(surface),
         Hitbox(
