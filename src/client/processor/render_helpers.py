@@ -1,6 +1,5 @@
 import math
 import queue
-import random
 import threading
 from collections import OrderedDict, deque
 from dataclasses import dataclass
@@ -10,8 +9,8 @@ import esper
 import pygame
 
 from client.component import AnimationState, PlayerTag, Position, Velocity
-from client.core.engine import Engine
 from client.core import get_bg_data
+from client.core.engine import Engine
 
 
 @dataclass
@@ -34,68 +33,6 @@ class Camera:
             self.y += (player_pos.y - self.y) * lerp
             return width / 2 - self.x, height / 2 - self.y
         return width / 2, height / 2
-
-
-@dataclass
-class Snowflake:
-    x: float
-    y: float
-    speed: float
-    drift: float
-    size: int
-
-
-@final
-class SnowSystem:
-    def __init__(self) -> None:
-        self._snow_flakes: list[Snowflake] = []
-        self._snow_surface = pygame.Surface((4, 4), flags=pygame.SRCALPHA)
-        pygame.draw.circle(self._snow_surface, (255, 255, 255, 200), (2, 2), 2)
-
-    def init_flakes(self, width: int, height: int) -> None:
-        target_count = max(120, int((width * height) / 8000))
-        view_left = -width / 2
-        view_top = -height / 2
-        view_right = width / 2
-        view_bottom = height / 2
-        self._snow_flakes = [
-            Snowflake(
-                x=random.uniform(view_left, view_right),
-                y=random.uniform(view_top, view_bottom),
-                speed=random.uniform(20.0, 70.0),
-                drift=random.uniform(-15.0, 15.0),
-                size=random.choice([2, 3, 4]),
-            )
-            for _ in range(target_count)
-        ]
-
-    def update(
-        self, dt: float, width: int, height: int, camera_x: float, camera_y: float
-    ) -> None:
-        view_left = camera_x - width / 2
-        view_top = camera_y - height / 2
-        view_right = camera_x + width / 2
-        view_bottom = camera_y + height / 2
-        for flake in self._snow_flakes:
-            flake.y += flake.speed * dt
-            flake.x += flake.drift * dt
-            if flake.y > view_bottom + 5:
-                flake.y = view_top - 5
-                flake.x = random.uniform(view_left, view_right)
-            if flake.x < view_left - 5:
-                flake.x = view_right + 5
-            elif flake.x > view_right + 5:
-                flake.x = view_left - 5
-
-    def draw(self, screen: pygame.Surface, offset_x: float, offset_y: float) -> None:
-        for flake in self._snow_flakes:
-            screen_pos = (flake.x + offset_x, flake.y + offset_y)
-            if flake.size == 4:
-                screen.blit(self._snow_surface, screen_pos)
-            elif flake.size == 3:
-                screen.blit(self._snow_surface, screen_pos, area=(0, 0, 3, 3))
-            else:
-                screen.blit(self._snow_surface, screen_pos, area=(0, 0, 2, 2))
 
 
 @final
