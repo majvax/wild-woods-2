@@ -126,7 +126,11 @@ class RenderProc(Processor):
 
         fps = int(1.0 / dt) if dt > 0 else 0
         num_ent = sum(1 for _ in esper.get_entities())
-        hp_text = f" | {player.hp.current}PV" if player is not None else ""
+        hp_text = (
+            f" | {int(player.hp.current)}/{int(player.hp.max)}PV"
+            if player is not None
+            else ""
+        )
         fps_text = self.font.render(
             f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES{hp_text}",
             True,
