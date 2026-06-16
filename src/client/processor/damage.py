@@ -4,16 +4,19 @@ from typing import final, override
 import esper
 
 from client.component import (
+    CampfireTag,
     DamageDealer,
     EnemyTag,
     Health,
     Hitbox,
+    Invincibility,
     Position,
     ProjectileTag,
     aabb_overlap,
     hitbox_bounds,
 )
 from client.core.spatial import SpatialGrid, get_active_grid
+from client.utils.ecs import get_components
 from client.view.player import PlayerView
 
 _INVINCIBILITY_AFTER_HIT = 1.0
@@ -37,6 +40,7 @@ class DamageProc(esper.Processor):
     @override
     def process(self, dt: float):
         self._enemies_damage_player(dt)
+        self._enemies_damage_campfire(dt)
         self._projectiles_damage_enemies()
 
     def _enemies_damage_player(self, dt: float) -> None:
@@ -84,3 +88,21 @@ class DamageProc(esper.Processor):
 
         for b_ent in to_delete:
             esper.delete_entity(b_ent)
+
+    def _enemies_damage_campfire(self, dt: float) -> None:
+        campfires = get_components(CampfireTag, Position, Health, Hitbox, Invincibility)
+        if not campfires:
+            return
+        for _, (_, cpos, chp, chit, cinv) in campfires:
+            cinv.time -= dt
+            if cinv.time > 0:
+                continue
+
+            c_bounds = hitbox_bounds(cpos, chit)
+            for _, (_, epos, edmg, ehit) in esper.get_components(
+                EnemyTag, Position, DamageDealer, Hitbox
+            ):
+                if aabb_overlap(c_bounds, hitbox_bounds(epos, ehit)):
+                    chp.current -= edmg.amount
+                    cinv.time = 1.0
+                    break

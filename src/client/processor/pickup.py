@@ -4,7 +4,10 @@ import esper
 from esper import Processor
 
 from client.component import (
+    CampfireTag,
+    Health,
     Hitbox,
+    ItemKind,
     ItemTag,
     Position,
     aabb_overlap,
@@ -26,9 +29,20 @@ class PickupProc(Processor):
 
         picked: list[int] = []
         for item_ent, (item_tag, ipos, ihit) in items:
-            if aabb_overlap(p_bounds, hitbox_bounds(ipos, ihit)):
-                player.inv.add(item_tag.kind)
-                picked.append(item_ent)
+            if not aabb_overlap(p_bounds, hitbox_bounds(ipos, ihit)):
+                continue
+
+            player.inv.add(item_tag.kind)
+            picked.append(item_ent)
+
+            if item_tag.kind == ItemKind.HEALTH:
+                player.hp.current = min(player.hp.current + 1, player.hp.max)
+            elif item_tag.kind == ItemKind.LIMBS:
+                campfires = esper.get_components(CampfireTag, Health)
+                if campfires:
+                    _, (_, chp) = campfires[0]
+                    if chp.current > 0:
+                        chp.current = min(chp.current + 1, chp.max)
 
         for item_ent in picked:
             esper.delete_entity(item_ent)

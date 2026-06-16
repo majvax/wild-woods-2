@@ -1,3 +1,4 @@
+import random
 from typing import Callable, final, override
 
 import esper
@@ -5,13 +6,18 @@ import pygame
 
 from client.component import (
     AnimationState,
+    CampfireTag,
     EnemyTag,
     Health,
+    LootTable,
+    LootTableKind,
     PlayerTag,
+    Position,
     Speed,
     Sprite,
     Weapon,
 )
+from client.factory import create_item
 
 
 @final
@@ -63,5 +69,30 @@ class DeathProc(esper.Processor):
                 ehp.current = 0
                 dead_enemies.append(e_ent)
 
+                if not esper.has_component(e_ent, LootTable):
+                    continue
+
+                loot = esper.component_for_entity(e_ent, LootTable)
+                pos = esper.component_for_entity(e_ent, Position)
+
+                if loot.kind == LootTableKind.LOOT_ONE:
+                    num = len(loot.entries)
+                    if num == 0:
+                        continue
+                    luck_item = [30, 30, 40]
+                    kind, _ = random.choices(loot.entries, weights=luck_item, k=1)[0]
+                    create_item(Position(pos.x, pos.y), kind)
+                elif loot.kind == LootTableKind.LOOT_MANY:
+                    for kind, chance in loot.entries:
+                        if random.random() < chance:
+                            create_item(Position(pos.x, pos.y), kind)
+
         for e_ent in dead_enemies:
             esper.delete_entity(e_ent)
+
+        campfire = esper.get_components(CampfireTag, Health)
+        if not campfire:
+            return
+        _, (_, chp) = campfire[0]
+        if chp.current <= 0:
+            chp.current = 0

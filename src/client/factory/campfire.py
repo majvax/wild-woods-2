@@ -11,10 +11,11 @@ from client.component import (
     Hitbox,
     Position,
     Sprite,
+    Invincibility,
 )
 
 
-def create_campfire(pos: Position, max_health: float = 100.0) -> None:
+def create_campfire(pos: Position, max_health: float = 10.0) -> None:
     basic_frames = [
         pygame.image.load(f"assets/sprite/campfire/basic/frame{i}.png").convert_alpha()
         for i in range(1, 6)
@@ -47,4 +48,5 @@ def create_campfire(pos: Position, max_health: float = 100.0) -> None:
             - surface.get_height() / 2,
         ),
         CampfireTag(),
+        Invincibility(0),
     )

@@ -11,6 +11,7 @@ from client.component import (
     ItemKind,
     Position,
     Sprite,
+    EnemyTag,
 )
 from client.core import TILE_SIZE, get_bg_data
 from client.core.engine import Engine
@@ -79,6 +80,34 @@ class RenderProc(Processor):
                 hitbox_surf.fill((0, 255, 0, 120))
                 self.screen.blit(hitbox_surf, (hx, hy))
 
+            hx = int(
+                player.pos.x
+                + player.hitbox.offset_x
+                + offset_x
+                - player.hitbox.width / 2
+            )
+            hy = int(
+                player.pos.y
+                + player.hitbox.offset_y
+                + offset_y
+                - player.hitbox.height / 2
+            )
+            surf = pygame.Surface(
+                (int(player.hitbox.width), int(player.hitbox.height)),
+                pygame.SRCALPHA,
+            )
+            surf.fill((0, 100, 255, 120))
+            self.screen.blit(surf, (hx, hy))
+
+            for _, (_, epos, ehit) in esper.get_components(EnemyTag, Position, Hitbox):
+                hx = int(epos.x + ehit.offset_x + offset_x - ehit.width / 2)
+                hy = int(epos.y + ehit.offset_y + offset_y - ehit.height / 2)
+                surf = pygame.Surface(
+                    (int(ehit.width), int(ehit.height)), pygame.SRCALPHA
+                )
+                surf.fill((255, 0, 0, 120))
+                self.screen.blit(surf, (hx, hy))
+
         fps = int(1.0 / dt) if dt > 0 else 0
         num_ent = sum(1 for _ in esper.get_entities())
         hp_text = f" | {int(player.hp.current)}/{int(player.hp.max)}PV"
@@ -126,18 +155,19 @@ class RenderProc(Processor):
             self._camera.y,
         )
 
-        line_h = self.font.get_linesize()
-        inv_start_y = 10 + line_h + 6
-        header = self.font.render("Inventory", True, pygame.Color("black"))
-        self.screen.blit(header, (10, inv_start_y))
-        y = inv_start_y + line_h
-        for kind in ItemKind:
-            icon = self._item_icons.get(kind)
-            text_x = 10
-            if icon is not None:
-                self.screen.blit(icon, (10, y + (line_h - icon.get_height()) // 2))
-                text_x = 10 + icon.get_width() + 4
-            item_label = f"{kind.name.title()}: {player.inv.count(kind)}"
-            item_text = self.font.render(item_label, True, pygame.Color("black"))
-            self.screen.blit(item_text, (text_x, y))
-            y += line_h
+        gold = player.inv.count(ItemKind.GOLD)
+        icon = self._item_icons.get(ItemKind.GOLD)
+        y = 10 + self.font.get_linesize() + 6
+        if icon is not None:
+            self.screen.blit(icon, (10, y))
+            gold_text = self.font.render(f"{gold}", True, pygame.Color("black"))
+            self.screen.blit(
+                gold_text,
+                (
+                    10 + icon.get_width() + 4,
+                    y + (icon.get_height() - gold_text.get_height()) // 2,
+                ),
+            )
+        else:
+            gold_text = self.font.render(f"Gold: {gold}", True, pygame.Color("black"))
+            self.screen.blit(gold_text, (10, y))
