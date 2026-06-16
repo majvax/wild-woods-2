@@ -3,7 +3,7 @@ from typing import final, override
 import pygame
 
 from client.core import Engine
-from client.scene.loading import LoadingScene
+from client.scene.game import GameScene
 from client.ui.components import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -56,7 +56,7 @@ class MainMenuScene(Scene):
 
         if self._start_requested:
             self._engine.sm.pop()
-            self._engine.sm.push(LoadingScene, self._engine)
+            self._engine.sm.push(GameScene, self._engine)
             return False
 
         return False

@@ -1,4 +1,3 @@
-import math
 from typing import final, override
 
 import esper
@@ -13,16 +12,13 @@ from client.component import (
     Position,
     Sprite,
 )
-from client.core import (
-    CHUNK_SIZE_TILES,
-    TILE_SIZE,
-)
+from client.core import TILE_SIZE, get_bg_data
 from client.core.engine import Engine
 from client.factory.item import ITEM_SPRITE_PATHS
 from client.processor.render_helpers import (
     Camera,
-    ChunkRenderer,
     DebugOverlay,
+    draw_tiled_background,
 )
 from client.view.player import PlayerView
 
@@ -31,13 +27,7 @@ _INVENTORY_ICON_SIZE = 18
 
 @final
 class RenderProc(Processor):
-    def __init__(
-        self,
-        screen: pygame.Surface,
-        engine: Engine,
-        *,
-        chunk_renderer: ChunkRenderer | None = None,
-    ):
+    def __init__(self, screen: pygame.Surface, engine: Engine):
         super().__init__()
         self.screen = screen
         self._engine = engine
@@ -49,26 +39,12 @@ class RenderProc(Processor):
             )
             for kind, path in ITEM_SPRITE_PATHS.items()
         }
-        width, height = self.screen.get_size()
         self._camera = Camera(smoothness=12.0)
-        self._last_prewarm_center = (0, 0)
-        if chunk_renderer is None:
-            self._chunks = ChunkRenderer(
-                tile_size=TILE_SIZE,
-                chunk_size=CHUNK_SIZE_TILES,
-                prewarm_margin=5,
-                max_cache=4000,
-            )
-            self._chunks.schedule_prewarm(
-                width, height, center_chunk=self._last_prewarm_center
-            )
-        else:
-            self._chunks = chunk_renderer
+        self._background, _, _ = get_bg_data()
 
         self._debug_overlay = DebugOverlay(
             font=self.font,
             engine=self._engine,
-            chunk_renderer=self._chunks,
             tile_size=TILE_SIZE,
         )
 
@@ -80,28 +56,7 @@ class RenderProc(Processor):
 
         offset_x, offset_y = self._camera.update(player_pos, dt, width, height)
 
-        if player_pos is not None:
-            current_chunk = (
-                math.floor(player_pos.x / (CHUNK_SIZE_TILES * TILE_SIZE)),
-                math.floor(player_pos.y / (CHUNK_SIZE_TILES * TILE_SIZE)),
-            )
-            if current_chunk != self._last_prewarm_center:
-                self._last_prewarm_center = current_chunk
-                self._chunks.schedule_prewarm(
-                    width, height, current_chunk, prefer_near=True
-                )
-
-        self._chunks.pump_ready(max_per_frame=5)
-        self._chunks.draw(self.screen, width, height, offset_x, offset_y)
-        if self._engine.debug_enabled:
-            self._chunks.draw_outlines(
-                self.screen,
-                width,
-                height,
-                offset_x,
-                offset_y,
-                color=pygame.Color(255, 0, 255),
-            )
+        draw_tiled_background(self.screen, self._background, offset_x, offset_y)
 
         for _, (pos, sprite) in esper.get_components(Position, Sprite):
             self.screen.blit(
@@ -169,7 +124,6 @@ class RenderProc(Processor):
             fps,
             num_ent,
             width,
-            height,
             offset_x,
             offset_y,
             self._camera.x,
