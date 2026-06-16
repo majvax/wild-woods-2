@@ -5,7 +5,6 @@ _bg_w: int = 0
 _bg_h: int = 0
 
 TILE_SIZE = 10
-CHUNK_SIZE_TILES = 32
 
 
 def get_bg_data() -> tuple[pygame.Surface, int, int]:

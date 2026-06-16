@@ -7,15 +7,12 @@ import pygame
 
 from client.component import CampfireTag, Health, Position
 from client.core import (
-    CHUNK_SIZE_TILES,
     DEFAULT_DIFFICULTY,
     DIFFICULTIES,
-    TILE_SIZE,
     Difficulty,
     Engine,
 )
 from client.factory import create_bandit, create_campfire, create_player
-from client.view.player import PlayerView
 from client.processor import (
     AnimationProc,
     BrainProc,
@@ -35,6 +32,7 @@ from client.processor import (
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
 from client.scene.gameover import GameOverScene
+from client.view.player import PlayerView
 
 from .pause import PauseScene
 from .scene import Scene
@@ -80,10 +78,8 @@ class GameScene(Scene):
 
         esper.add_processor(RenderProc(self._screen, self._engine))
 
-        chunk_world_size = CHUNK_SIZE_TILES * TILE_SIZE
-        cx, cy = chunk_world_size / 2, chunk_world_size / 2
-        create_player(Position(cx, cy))
-        create_campfire(Position(cx, cy))
+        create_player(Position(0, 0))
+        create_campfire(Position(0, 0 - 140))
         self._spawn_bandit_near_player()
 
     def _spawn_bandit_near_player(self) -> None:
