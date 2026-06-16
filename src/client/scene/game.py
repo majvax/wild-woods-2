@@ -6,7 +6,14 @@ import esper
 import pygame
 
 from client.component import CampfireTag, Health, Position
-from client.core import CHUNK_SIZE_TILES, TILE_SIZE, Engine
+from client.core import (
+    CHUNK_SIZE_TILES,
+    DEFAULT_DIFFICULTY,
+    DIFFICULTIES,
+    TILE_SIZE,
+    Difficulty,
+    Engine,
+)
 from client.factory import create_bandit, create_campfire, create_player
 from client.view.player import PlayerView
 from client.processor import (
@@ -38,12 +45,18 @@ class GameScene(Scene):
     _screen: pygame.Surface
     _timer: float
 
-    def __init__(self, engine: Engine):
+    def __init__(
+        self,
+        engine: Engine,
+        difficulty: Difficulty = DIFFICULTIES[DEFAULT_DIFFICULTY],
+    ):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
         self._engine = engine
         self._game_over_requested = False
+        # Stored for now; difficulty does not affect gameplay yet.
+        self._difficulty = difficulty
 
     @override
     def on_enter(self) -> None:
@@ -113,7 +126,9 @@ class GameScene(Scene):
 
         if self._game_over_requested:
             self._game_over_requested = False
-            self._engine.sm.push(GameOverScene, self._engine, self.__class__)
+            self._engine.sm.push(
+                GameOverScene, self._engine, self.__class__, self._difficulty
+            )
             return False
 
         return True

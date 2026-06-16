@@ -2,7 +2,7 @@ from typing import final, override
 
 import pygame
 
-from client.core import Engine
+from client.core import Difficulty, Engine
 from client.ui import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -12,11 +12,14 @@ from .scene import Scene
 class GameOverScene(Scene):
     _screen: pygame.Surface
 
-    def __init__(self, engine: Engine, game_scene_t: type[Scene]):
+    def __init__(
+        self, engine: Engine, game_scene_t: type[Scene], difficulty: Difficulty
+    ):
         super().__init__()
         self._screen = engine.screen
         self._engine = engine
         self._game_scene_t = game_scene_t
+        self._difficulty = difficulty
 
         self._font_subtitle = pygame.font.SysFont("Arial", 24, italic=True)
         self._font_title = pygame.font.Font("assets/fonts/Eater/Eater-Regular.ttf", 150)
@@ -37,7 +40,7 @@ class GameOverScene(Scene):
 
     def _replay(self) -> None:
         self._engine.sm.clear()
-        self._engine.sm.push(self._game_scene_t, self._engine)
+        self._engine.sm.push(self._game_scene_t, self._engine, self._difficulty)
 
     @override
     def on_enter(self) -> None:
