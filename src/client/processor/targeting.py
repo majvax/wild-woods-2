@@ -17,6 +17,11 @@ class TargetingProc(esper.Processor):
         """
         player = PlayerView.get()
         if player is None:
+            for _, (_, _, targeting) in esper.get_components(
+                EnemyTag, Position, Targeting
+            ):
+                targeting.target = None
+                targeting.distance = float("inf")
             return
 
         for _, (_, pos, targeting) in esper.get_components(

@@ -1,6 +1,7 @@
+import math
 import random
 from typing import final, override
-import math
+
 import esper
 import pygame
 from esper import Processor
@@ -23,7 +24,6 @@ from client.processor.render_helpers import (
     Camera,
     ChunkRenderer,
     DebugOverlay,
-    SnowSystem,
 )
 from client.view.player import PlayerView
 
@@ -54,8 +54,6 @@ class RenderProc(Processor):
         self._background_seed = random.randint(0, 1000)
         self._noise_scale = 60.0
         self._camera = Camera(smoothness=12.0)
-        self._snow = SnowSystem()
-        self._snow.init_flakes(width, height)
         self._last_prewarm_center = (0, 0)
         if chunk_renderer is None:
             self._chunks = ChunkRenderer(
