@@ -29,7 +29,13 @@ class PlayerView:
     invincibility: Invincibility
 
     @classmethod
-    def get(cls) -> Self | None:
+    def get(cls) -> Self:
+        """Return the player view.
+
+        The player entity exists for the entire lifetime of the game world, so
+        this never returns ``None``. If it is somehow missing, that is a bug and
+        we fail fast rather than silently skipping logic.
+        """
         query = get_components(
             PlayerTag,
             Position,
@@ -41,7 +47,7 @@ class PlayerView:
             Invincibility,
         )
         if not query:
-            return None
+            raise RuntimeError("PlayerView.get() called but no player entity exists")
         ent, data = query[0]
         return cls(ent, *data[1:])
 

@@ -12,8 +12,6 @@ class InputProc(Processor):
     @override
     def process(self, _):
         player = PlayerView.get()
-        if player is None:
-            return
 
         keys = pygame.key.get_pressed()
         player.vel.vx = 0

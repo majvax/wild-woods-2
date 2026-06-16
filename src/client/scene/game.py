@@ -73,12 +73,8 @@ class GameScene(Scene):
         create_campfire(Position(cx, cy))
         self._spawn_bandit_near_player()
 
-    def _get_player_position(self) -> Position:
-        player = PlayerView.get()
-        return player.pos if player else Position(0, 0)
-
     def _spawn_bandit_near_player(self) -> None:
-        player_pos = self._get_player_position()
+        player_pos = PlayerView.get().pos
         angle = random.uniform(0, 2 * math.pi)
         dist = random.uniform(300, 500)
         pos = Position(

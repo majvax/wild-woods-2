@@ -31,10 +31,9 @@ class DeathProc(esper.Processor):
     def process(self, dt: float):
         if self._game_over_signaled:
             return
-        player = esper.get_components(PlayerTag, Health, Speed, Sprite)
-        if not player:
-            return
-        p_ent, (_, php, pspeed, psprite) = player[0]
+        p_ent, (_, php, pspeed, psprite) = esper.get_components(
+            PlayerTag, Health, Speed, Sprite
+        )[0]
 
         if php.current <= 0:
             php.current = 0

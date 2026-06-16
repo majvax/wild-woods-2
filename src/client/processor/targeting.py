@@ -16,13 +16,6 @@ class TargetingProc(esper.Processor):
         If it is, set the target and distance. Otherwise, clear target info.
         """
         player = PlayerView.get()
-        if player is None:
-            for _, (_, _, targeting) in esper.get_components(
-                EnemyTag, Position, Targeting
-            ):
-                targeting.target = None
-                targeting.distance = float("inf")
-            return
 
         for _, (_, pos, targeting) in esper.get_components(
             EnemyTag, Position, Targeting

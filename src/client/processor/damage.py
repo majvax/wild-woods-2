@@ -41,8 +41,6 @@ class DamageProc(esper.Processor):
 
     def _enemies_damage_player(self, dt: float) -> None:
         player = PlayerView.get()
-        if player is None:
-            return
 
         player.invincibility.time -= dt
         if player.invincibility.time > 0:

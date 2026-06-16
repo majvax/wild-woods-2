@@ -14,8 +14,6 @@ class ShootingProc(esper.Processor):
     @override
     def process(self, dt: float):
         player = PlayerView.get()
-        if player is None:
-            return
         weapon = player.weapon()
         if weapon is None:
             return

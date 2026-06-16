@@ -43,8 +43,7 @@ class CollisionProc(Processor):
             return
 
         player = PlayerView.get()
-        if player is not None:
-            _resolve_against_campfires([(player.pos, player.hitbox)], campfires)
+        _resolve_against_campfires([(player.pos, player.hitbox)], campfires)
 
         enemies = (
             (e_pos, e_hit)

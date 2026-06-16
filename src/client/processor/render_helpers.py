@@ -5,8 +5,9 @@ from typing import final
 import esper
 import pygame
 
-from client.component import AnimationState, PlayerTag, Position, Velocity
+from client.component import AnimationState, Position
 from client.core.engine import Engine
+from client.view.player import PlayerView
 
 
 @dataclass
@@ -17,18 +18,16 @@ class Camera:
     initialized: bool = False
 
     def update(
-        self, player_pos: Position | None, dt: float, width: int, height: int
+        self, player_pos: Position, dt: float, width: int, height: int
     ) -> tuple[float, float]:
-        if player_pos is not None:
-            if not self.initialized:
-                self.x = player_pos.x
-                self.y = player_pos.y
-                self.initialized = True
-            lerp = min(1.0, self.smoothness * dt)
-            self.x += (player_pos.x - self.x) * lerp
-            self.y += (player_pos.y - self.y) * lerp
-            return width / 2 - self.x, height / 2 - self.y
-        return width / 2, height / 2
+        if not self.initialized:
+            self.x = player_pos.x
+            self.y = player_pos.y
+            self.initialized = True
+        lerp = min(1.0, self.smoothness * dt)
+        self.x += (player_pos.x - self.x) * lerp
+        self.y += (player_pos.y - self.y) * lerp
+        return width / 2 - self.x, height / 2 - self.y
 
 
 def draw_tiled_background(
@@ -83,33 +82,18 @@ class DebugOverlay:
         offset_y: float,
         camera_x: float,
         camera_y: float,
-        player_pos: Position | None,
     ) -> None:
         if not self._engine.debug_enabled:
             return
 
-        player_vel = None
-        player_anim = None
-        if player_pos is None:
-            players = esper.get_components(PlayerTag, Position, Velocity)
-            if players:
-                _, (_, player_pos, player_vel) = players[0]
-                try:
-                    player_anim = esper.component_for_entity(
-                        players[0][0], AnimationState
-                    )
-                except KeyError:
-                    player_anim = None
-        else:
-            players = esper.get_components(PlayerTag, Position, Velocity)
-            if players:
-                _, (_, _, player_vel) = players[0]
-                try:
-                    player_anim = esper.component_for_entity(
-                        players[0][0], AnimationState
-                    )
-                except KeyError:
-                    player_anim = None
+        player = PlayerView.get()
+        try:
+            player_anim = esper.component_for_entity(player.ent, AnimationState)
+        except KeyError:
+            player_anim = None
+
+        tile_x = math.floor(player.pos.x / self._tile_size)
+        tile_y = math.floor(player.pos.y / self._tile_size)
 
         lines: list[str] = []
         lines.append(
@@ -119,19 +103,11 @@ class DebugOverlay:
         lines.append(f"DT: {dt:.4f}s | FPS: {fps}")
         lines.append(f"Camera: ({camera_x:.1f}, {camera_y:.1f})")
         lines.append(f"Offset: ({offset_x:.1f}, {offset_y:.1f})")
-
-        if player_pos is not None and player_vel is not None:
-            tile_x = math.floor(player_pos.x / self._tile_size)
-            tile_y = math.floor(player_pos.y / self._tile_size)
-
-            lines.append(
-                f"Player: ({player_pos.x:.1f}, {player_pos.y:.1f}) "
-                + f"vel=({player_vel.vx:.1f}, {player_vel.vy:.1f})"
-            )
-            lines.append(f"Tile: ({tile_x}, {tile_y})")
-        else:
-            lines.append("Player: N/A")
-
+        lines.append(
+            f"Player: ({player.pos.x:.1f}, {player.pos.y:.1f}) "
+            + f"vel=({player.vel.vx:.1f}, {player.vel.vy:.1f})"
+        )
+        lines.append(f"Tile: ({tile_x}, {tile_y})")
         if player_anim is not None:
             lines.append(f"Anim: {player_anim.current}")
         lines.append(f"Entities: {num_ent}")
