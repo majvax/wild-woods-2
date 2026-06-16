@@ -1,5 +1,4 @@
 import math
-import random
 from typing import final, override
 
 import esper
@@ -51,16 +50,12 @@ class RenderProc(Processor):
             for kind, path in ITEM_SPRITE_PATHS.items()
         }
         width, height = self.screen.get_size()
-        self._background_seed = random.randint(0, 1000)
-        self._noise_scale = 60.0
         self._camera = Camera(smoothness=12.0)
         self._last_prewarm_center = (0, 0)
         if chunk_renderer is None:
             self._chunks = ChunkRenderer(
                 tile_size=TILE_SIZE,
                 chunk_size=CHUNK_SIZE_TILES,
-                seed=self._background_seed,
-                noise_scale=self._noise_scale,
                 prewarm_margin=5,
                 max_cache=4000,
             )
@@ -69,8 +64,6 @@ class RenderProc(Processor):
             )
         else:
             self._chunks = chunk_renderer
-            self._background_seed = chunk_renderer.seed
-            self._noise_scale = chunk_renderer.noise_scale
 
         self._debug_overlay = DebugOverlay(
             font=self.font,
@@ -177,8 +170,6 @@ class RenderProc(Processor):
             offset_y,
             self._camera.x,
             self._camera.y,
-            self._background_seed,
-            self._noise_scale,
             player_pos,
         )
 

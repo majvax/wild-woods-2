@@ -1,4 +1,3 @@
-import random
 from typing import final, override
 
 import pygame
@@ -22,13 +21,9 @@ class LoadingScene(Scene):
         self._screen = engine.screen
         self._font = pygame.font.SysFont("Arial", 28)
         self._progress_font = pygame.font.SysFont("Arial", 18)
-        self._seed = random.randint(0, 1000)
-        self._noise_scale = 60.0
         self._chunks = ChunkRenderer(
             tile_size=TILE_SIZE,
             chunk_size=CHUNK_SIZE_TILES,
-            seed=self._seed,
-            noise_scale=self._noise_scale,
             prewarm_margin=20,
             max_cache=3000,
         )

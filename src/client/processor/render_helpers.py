@@ -41,15 +41,11 @@ class ChunkRenderer:
         self,
         tile_size: int,
         chunk_size: int,
-        seed: int,
-        noise_scale: float,
         prewarm_margin: int,
         max_cache: int,
     ) -> None:
         self._tile_size = tile_size
         self._chunk_size = chunk_size
-        self._seed = seed
-        self._noise_scale = noise_scale
         self._prewarm_margin = prewarm_margin
         self._max_cache = max_cache
         self._cache: "OrderedDict[tuple[int, int], pygame.Surface]" = OrderedDict()
@@ -73,14 +69,6 @@ class ChunkRenderer:
     @property
     def max_cache(self) -> int:
         return self._max_cache
-
-    @property
-    def seed(self) -> int:
-        return self._seed
-
-    @property
-    def noise_scale(self) -> float:
-        return self._noise_scale
 
     def scheduled_count(self) -> int:
         return len(self._scheduled)
@@ -262,8 +250,6 @@ class DebugOverlay:
         offset_y: float,
         camera_x: float,
         camera_y: float,
-        _background_seed: int,
-        _noise_scale: float,
         player_pos: Position | None,
     ) -> None:
         if not self._engine.debug_enabled:
@@ -313,13 +299,11 @@ class DebugOverlay:
             chunk_x = math.floor(player_pos.x / self._chunk_renderer.chunk_world_size)
             chunk_y = math.floor(player_pos.y / self._chunk_renderer.chunk_world_size)
 
-            biome = "Plains (Image)"
             lines.append(
                 f"Player: ({player_pos.x:.1f}, {player_pos.y:.1f}) "
                 + f"vel=({player_vel.vx:.1f}, {player_vel.vy:.1f})"
             )
             lines.append(f"Tile: ({tile_x}, {tile_y}) Chunk: ({chunk_x}, {chunk_y})")
-            lines.append(f"Biome: {biome}")
         else:
             lines.append("Player: N/A")
 
