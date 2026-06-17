@@ -87,11 +87,11 @@ class RenderProc(Processor):
                     700,
                     2,
                 )
-            if player_pos is not None:
-                px = int(player_pos.x + offset_x)
-                py = int(player_pos.y + offset_y)
-                pygame.draw.circle(self.screen, (0, 180, 255), (px, py), 300, 2)
-                pygame.draw.circle(self.screen, (0, 80, 255), (px, py), 800, 2)
+
+            px = int(player_pos.x + offset_x)
+            py = int(player_pos.y + offset_y)
+            pygame.draw.circle(self.screen, (0, 180, 255), (px, py), 300, 2)
+            pygame.draw.circle(self.screen, (0, 80, 255), (px, py), 800, 2)
 
             hx = int(
                 player.pos.x
