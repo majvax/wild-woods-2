@@ -37,11 +37,10 @@ def create_bandit(pos: Position, difficulty: int = 0):
     directions = ["up", "down", "left", "right"]
     dir_map = {
         "up": "up",
-        "down": "left",
-        "left": "down",
+        "down": "down",
+        "left": "left",
         "right": "right",
     }
-    # TODO: replace with actual bandit sprite
 
     clips: dict[str, AnimationClip] = {}
     for direction in directions:
