@@ -86,7 +86,6 @@ class GameScene(Scene):
         create_campfire(Position(0, 0 - 140))
         self._spawn_bandit_near_player()
 
-
     def _get_player_position(self) -> Position:
         player = PlayerView.get()
         return player.pos

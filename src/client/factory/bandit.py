@@ -32,7 +32,6 @@ def _load_sequence(path_template: str, count: int) -> list[pygame.Surface]:
     ]
 
 
-
 def create_bandit(pos: Position, difficulty: int = 0):
     directions = ["up", "down", "left", "right"]
     dir_map = {
