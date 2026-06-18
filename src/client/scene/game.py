@@ -1,5 +1,6 @@
 import math
 import random
+from collections.abc import Callable
 from typing import cast, final, override
 
 import esper
@@ -47,15 +48,15 @@ class GameScene(Scene):
         self,
         engine: Engine,
         difficulty: Difficulty = DIFFICULTIES[DEFAULT_DIFFICULTY],
+        on_game_over: Callable[[], None] | None = None,
     ):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
         self._engine = engine
         self._game_over_requested = False
-        # Menu-selected difficulty: threaded to game-over/replay, no gameplay effect yet.
         self._difficulty = difficulty
-        # Time-based difficulty escalation that scales enemy spawn rate and stats.
+        self._on_game_over_cb = on_game_over
         self._elapsed_time = 0.0
         self._difficulty_level = 0
         self._difficulty_timer = 0.0
@@ -82,7 +83,7 @@ class GameScene(Scene):
 
         esper.add_processor(RenderProc(self._screen, self._engine))
 
-        create_player(Position(0, 0))
+        create_player(Position(0, 0), health=self._difficulty.player_health)
         create_campfire(Position(0, 0 - 140))
         self._spawn_bandit_near_player()
 
@@ -112,7 +113,10 @@ class GameScene(Scene):
                 dy = pos.y - campfire_pos.y
                 if math.hypot(dx, dy) < 700:
                     continue
-            create_bandit(pos)
+            create_bandit(
+                pos,
+                difficulty=self._difficulty_level + self._difficulty.enemy_level_offset,
+            )
             return
 
     def _on_game_over(self) -> None:
@@ -135,15 +139,17 @@ class GameScene(Scene):
                 for _, (_, health) in esper.get_components(CampfireTag, Health):
                     health.current = max(0.0, health.current - 10.0)
 
-        self._difficulty_timer += dt  # augmentation de la difficulté
+        self._difficulty_timer += dt
         if self._difficulty_timer >= 10.0:
             self._difficulty_level += 1
             self._difficulty_timer = 0.0
 
         self._elapsed_time += dt
-        spawn_interval = max(0.5, 4.0 - self._elapsed_time * 0.02)
+        spawn_interval = max(
+            self._difficulty.spawn_interval_min,
+            self._difficulty.spawn_interval_base - self._elapsed_time * 0.02,
+        )
 
-        # Spawn bandits near player every 4 seconds
         self._timer += dt
         if self._timer > spawn_interval:
             self._spawn_bandit_near_player()
@@ -153,9 +159,8 @@ class GameScene(Scene):
 
         if self._game_over_requested:
             self._game_over_requested = False
-            self._engine.sm.push(
-                GameOverScene, self._engine, self.__class__, self._difficulty
-            )
+            if self._on_game_over_cb is not None:
+                self._engine.sm.push(GameOverScene, self._engine, self._on_game_over_cb)
             return False
 
         return True
