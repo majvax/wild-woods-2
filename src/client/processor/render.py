@@ -21,6 +21,7 @@ from client.processor.render_helpers import (
     DebugOverlay,
     draw_tiled_background,
 )
+from client.processor.damage import INVINCIBILITY_AFTER_HIT
 from client.view.player import PlayerView
 
 _INVENTORY_ICON_SIZE = 18
@@ -123,13 +124,12 @@ class RenderProc(Processor):
 
         fps = int(1.0 / dt) if dt > 0 else 0
         num_ent = sum(1 for _ in esper.get_entities())
-        hp_text = f" | {int(player.hp.current)}/{int(player.hp.max)}PV"
         fps_text = self.font.render(
-            f"FPS: {max(0, min(fps, 999))} | {num_ent} ENTITIES{hp_text}",
+            f"FPS: {max(0, min(fps, 999))} ",
             True,
             pygame.Color("black"),
         )
-        self.screen.blit(fps_text, (10, 10))
+        self.screen.blit(fps_text, (width - fps_text.get_width() - 10, 10))
 
         campfires = esper.get_components(CampfireTag, Health)
         if campfires:
@@ -155,6 +155,35 @@ class RenderProc(Processor):
                     bar_y + (bar_h - label.get_height()) // 2,
                 ),
             )
+
+        # barre de pv du joueur
+        bar_w = 200
+        bar_h = 20
+        bar_x = 10
+        bar_y = 10
+        ratio = max(0.0, player.hp.current / player.hp.max)
+        pygame.draw.rect(self.screen, (60, 0, 0), (bar_x, bar_y, bar_w, bar_h))
+        pygame.draw.rect(
+            self.screen, (0, 200, 0), (bar_x, bar_y, int(bar_w * ratio), bar_h)
+        )
+        label = self.font.render(
+            f"PV : {int(player.hp.current)}/{int(player.hp.max)}",
+            True,
+            pygame.Color("white"),
+        )
+        self.screen.blit(
+            label,
+            (
+                bar_x + (bar_w - label.get_width()) // 2,
+                bar_y + (bar_h - label.get_height()) // 2,
+            ),
+        )
+        # si le joueur subit un dégat : flash rouge
+        if player.invincibility.time > 0:
+            alpha = int((player.invincibility.time / INVINCIBILITY_AFTER_HIT) * 80)
+            flash = pygame.Surface((width, height), pygame.SRCALPHA)
+            flash.fill((255, 0, 0, alpha))
+            self.screen.blit(flash, (0, 0))
 
         self._debug_overlay.draw(
             self.screen,
