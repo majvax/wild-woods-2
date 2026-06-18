@@ -33,10 +33,14 @@ from client.processor import (
 from client.processor.damage import DamageProc
 from client.processor.death import DeathProc
 from client.scene.gameover import GameOverScene
+from client.scene.shop import ShopScene
+from client.scene.win import WinScene
 from client.view.player import PlayerView
 
 from .pause import PauseScene
 from .scene import Scene
+
+_SHOP_RANGE = 200.0
 
 
 @final
@@ -60,6 +64,9 @@ class GameScene(Scene):
         self._elapsed_time = 0.0
         self._difficulty_level = 0
         self._difficulty_timer = 0.0
+        self._shop_counts: list[int] = [0, 0, 0]
+        self._open_shop = False
+        self._hint_font = pygame.font.SysFont("Arial", 20, bold=True)
 
     @override
     def on_enter(self) -> None:
@@ -98,6 +105,16 @@ class GameScene(Scene):
             return pos
         return None
 
+    def _is_near_campfire(self) -> bool:
+        campfire_pos = self._get_campfire_position()
+        if campfire_pos is None:
+            return False
+        player_pos = self._get_player_position()
+        return (
+            math.hypot(player_pos.x - campfire_pos.x, player_pos.y - campfire_pos.y)
+            < _SHOP_RANGE
+        )
+
     def _spawn_bandit_near_player(self) -> None:
         player_pos = self._get_player_position()
         campfire_pos = self._get_campfire_position()
@@ -122,12 +139,19 @@ class GameScene(Scene):
     def _on_game_over(self) -> None:
         self._game_over_requested = True
 
+    def _on_win(self) -> None:
+        on_menu = self._on_game_over_cb or self._engine.stop
+        self._engine.sm.clear()
+        self._engine.sm.push(WinScene, self._engine, on_menu)
+
     @override
     def on_exit(self) -> None:
         pass
 
     @override
     def process(self, dt: float, events: list[pygame.event.Event]) -> bool:
+        near_campfire = self._is_near_campfire()
+
         for event in events:
             if event.type != pygame.KEYDOWN:
                 continue
@@ -138,6 +162,8 @@ class GameScene(Scene):
             if key == pygame.K_m:
                 for _, (_, health) in esper.get_components(CampfireTag, Health):
                     health.current = max(0.0, health.current - 10.0)
+            if key == pygame.K_e and near_campfire:
+                self._open_shop = True
 
         self._difficulty_timer += dt
         if self._difficulty_timer >= 10.0:
@@ -156,6 +182,32 @@ class GameScene(Scene):
             self._timer = 0
 
         esper.process(dt)
+
+        # Proximity hint drawn on top of the game render
+        if near_campfire:
+            w, h = self._screen.get_size()
+            hint = self._hint_font.render("E — Boutique", True, pygame.Color("white"))
+            shadow = self._hint_font.render("E — Boutique", True, pygame.Color(0, 0, 0))
+            cx, cy = w // 2, h - 50
+            self._screen.blit(shadow, shadow.get_rect(center=(cx + 1, cy + 1)))
+            self._screen.blit(hint, hint.get_rect(center=(cx, cy)))
+
+        # Push shop AFTER rendering so screen.copy() captures the current game frame
+        if self._open_shop:
+            self._open_shop = False
+            player = PlayerView.get()
+            weapon = player.weapon()
+            if weapon is not None:
+                self._engine.sm.push(
+                    ShopScene,
+                    self._engine,
+                    player.hp,
+                    weapon,
+                    player.inv,
+                    self._on_win,
+                    self._shop_counts,
+                )
+                return True
 
         if self._game_over_requested:
             self._game_over_requested = False
