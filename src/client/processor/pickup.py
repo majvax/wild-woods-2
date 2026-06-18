@@ -1,5 +1,5 @@
 from typing import final, override
-
+import pygame
 import esper
 from esper import Processor
 
@@ -18,6 +18,10 @@ from client.view.player import PlayerView
 
 @final
 class PickupProc(Processor):
+    def __init__(self):
+        self._coin_sound = pygame.mixer.Sound("assets/sound/pickup_coins.mp3")
+        self._coin_sound.set_volume(0.2)
+
     @override
     def process(self, dt: float) -> None:
         items = esper.get_components(ItemTag, Position, Hitbox)
@@ -43,6 +47,8 @@ class PickupProc(Processor):
                     _, (_, chp) = campfires[0]
                     if chp.current > 0:
                         chp.current = min(chp.current + 1, chp.max)
+            elif item_tag.kind == ItemKind.GOLD:
+                self._coin_sound.play()
 
         for item_ent in picked:
             esper.delete_entity(item_ent)

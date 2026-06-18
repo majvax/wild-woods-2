@@ -79,8 +79,8 @@ class DeathProc(esper.Processor):
                     num = len(loot.entries)
                     if num == 0:
                         continue
-                    luck_item = [30, 30, 40]
-                    kind, _ = random.choices(loot.entries, weights=luck_item, k=1)[0]
+                    idx = random.randint(0, num - 1)
+                    kind, _ = loot.entries[idx]
                     create_item(Position(pos.x, pos.y), kind)
                 elif loot.kind == LootTableKind.LOOT_MANY:
                     for kind, chance in loot.entries:

@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from typing import final, override
-
+import pygame
 import esper
 
 from client.component import (
@@ -19,7 +19,7 @@ from client.core.spatial import SpatialGrid, get_active_grid
 from client.utils.ecs import get_components
 from client.view.player import PlayerView
 
-_INVINCIBILITY_AFTER_HIT = 1.0
+INVINCIBILITY_AFTER_HIT = 1.0
 
 
 def _aabb_candidates(
@@ -37,6 +37,9 @@ def _aabb_candidates(
 
 @final
 class DamageProc(esper.Processor):
+    def __init__(self):
+        self._hurt_sound = pygame.mixer.Sound("assets/sound/hurt.mp3")
+
     @override
     def process(self, dt: float):
         self._enemies_damage_player(dt)
@@ -62,7 +65,8 @@ class DamageProc(esper.Processor):
 
             if aabb_overlap(p_bounds, hitbox_bounds(epos, ehit)):
                 player.hp.current -= edmg.amount
-                player.invincibility.time = _INVINCIBILITY_AFTER_HIT
+                player.invincibility.time = INVINCIBILITY_AFTER_HIT
+                self._hurt_sound.play()
                 return
 
     def _projectiles_damage_enemies(self) -> None:
