@@ -1,9 +1,9 @@
+from collections.abc import Callable
 from typing import final, override
 
 import pygame
 
-from client.core import DEFAULT_DIFFICULTY, DIFFICULTIES, Engine
-from client.scene.game import GameScene
+from client.core import DEFAULT_DIFFICULTY, DIFFICULTIES, Difficulty, Engine
 from client.ui.components import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -25,10 +25,11 @@ def _slice_strip(sheet: pygame.Surface, frame_size: int) -> list[pygame.Surface]
 
 @final
 class MainMenuScene(Scene):
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, on_start: Callable[[Difficulty], None]):
         super().__init__()
         self._engine = engine
         self._screen = engine.screen
+        self._on_start = on_start
         self._font = pygame.font.SysFont("Arial", 42)
         self._subtitle = pygame.font.SysFont("Arial", 22)
         self._difficulty_font = pygame.font.SysFont("Arial", 30, bold=True)
@@ -160,10 +161,8 @@ class MainMenuScene(Scene):
             button.draw(self._screen)
 
         if self._start_requested:
-            self._engine.sm.pop()
-            self._engine.sm.push(
-                GameScene, self._engine, DIFFICULTIES[self._difficulty_index]
-            )
+            self._start_requested = False
+            self._on_start(DIFFICULTIES[self._difficulty_index])
             return False
 
         return False

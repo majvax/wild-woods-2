@@ -17,6 +17,6 @@ DIFFICULTIES: list[Difficulty] = [
     Difficulty("Facile", "assets/map/planet.png", 80, 10, 0, 6.0, 1.0),
     Difficulty("Normal", "assets/map/planet.png", 80, 8, 10, 4.0, 0.8),
     Difficulty("Difficile", "assets/map/planet.png", 80, 6, 20, 3.0, 0.6),
-    Difficulty("Impossible", "assets/map/blackhole.png", 200, 4, 30, 2.0, 0.5),
+    Difficulty("Impossible", "assets/map/blackhole.png", 200, 4, 20, 2.0, 0.5),
 ]
 DEFAULT_DIFFICULTY = 1  # Normal

@@ -1,5 +1,6 @@
 import math
 import random
+from collections.abc import Callable
 from typing import cast, final, override
 
 import esper
@@ -47,15 +48,15 @@ class GameScene(Scene):
         self,
         engine: Engine,
         difficulty: Difficulty = DIFFICULTIES[DEFAULT_DIFFICULTY],
+        on_game_over: Callable[[], None] | None = None,
     ):
         super().__init__()
         self._screen = engine.screen
         self._timer = 0.0
         self._engine = engine
         self._game_over_requested = False
-        # Menu-selected difficulty: threaded to game-over/replay, no gameplay effect yet.
         self._difficulty = difficulty
-        # Time-based difficulty escalation that scales enemy spawn rate and stats.
+        self._on_game_over_cb = on_game_over
         self._elapsed_time = 0.0
         self._difficulty_level = 0
         self._difficulty_timer = 0.0
@@ -138,7 +139,7 @@ class GameScene(Scene):
                 for _, (_, health) in esper.get_components(CampfireTag, Health):
                     health.current = max(0.0, health.current - 10.0)
 
-        self._difficulty_timer += dt  # augmentation de la difficulté
+        self._difficulty_timer += dt
         if self._difficulty_timer >= 10.0:
             self._difficulty_level += 1
             self._difficulty_timer = 0.0
@@ -149,7 +150,6 @@ class GameScene(Scene):
             self._difficulty.spawn_interval_base - self._elapsed_time * 0.02,
         )
 
-        # Spawn bandits near player every 4 seconds
         self._timer += dt
         if self._timer > spawn_interval:
             self._spawn_bandit_near_player()
@@ -159,9 +159,8 @@ class GameScene(Scene):
 
         if self._game_over_requested:
             self._game_over_requested = False
-            self._engine.sm.push(
-                GameOverScene, self._engine, self.__class__, self._difficulty
-            )
+            if self._on_game_over_cb is not None:
+                self._engine.sm.push(GameOverScene, self._engine, self._on_game_over_cb)
             return False
 
         return True

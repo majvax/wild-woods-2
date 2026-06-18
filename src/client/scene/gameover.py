@@ -1,8 +1,9 @@
+from collections.abc import Callable
 from typing import final, override
 
 import pygame
 
-from client.core import Difficulty, Engine
+from client.core import Engine
 from client.ui import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -12,14 +13,11 @@ from .scene import Scene
 class GameOverScene(Scene):
     _screen: pygame.Surface
 
-    def __init__(
-        self, engine: Engine, game_scene_t: type[Scene], difficulty: Difficulty
-    ):
+    def __init__(self, engine: Engine, on_replay: Callable[[], None]):
         super().__init__()
         self._screen = engine.screen
         self._engine = engine
-        self._game_scene_t = game_scene_t
-        self._difficulty = difficulty
+        self._on_replay = on_replay
 
         self._font_subtitle = pygame.font.SysFont("Arial", 24, italic=True)
         self._font_title = pygame.font.Font("assets/fonts/Eater/Eater-Regular.ttf", 150)
@@ -39,8 +37,7 @@ class GameOverScene(Scene):
         self._engine.stop()
 
     def _replay(self) -> None:
-        self._engine.sm.clear()
-        self._engine.sm.push(self._game_scene_t, self._engine, self._difficulty)
+        self._on_replay()
 
     @override
     def on_enter(self) -> None:
