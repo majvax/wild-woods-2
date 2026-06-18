@@ -53,9 +53,9 @@ def create_bandit(pos: Position, difficulty: int = 0):
 
     surface = clips["run_down"].frames[0]
     entries = [
-        (ItemKind.HEALTH, 0.5),
-        (ItemKind.LIMBS, 0.3),
-        (ItemKind.GOLD, 0.2),
+        (ItemKind.HEALTH, 0.1),
+        (ItemKind.LIMBS, 0.1),
+        (ItemKind.GOLD, 1.0),
     ]
 
     true_rect = surface.get_bounding_rect()
@@ -80,7 +80,7 @@ def create_bandit(pos: Position, difficulty: int = 0):
         Targeting(range=200),
         PatrolSettings.from_random(),
         PatrolRuntime(),
-        LootTable(LootTableKind.LOOT_ONE, entries),
+        LootTable(LootTableKind.LOOT_MANY, entries),
         AnimationSet(clips=clips),
         AnimationState(current="run_down"),
         AnimationRuntime(state="run_down", frame_index=0, frame_time=0.0),
