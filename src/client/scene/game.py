@@ -106,14 +106,14 @@ class GameScene(Scene):
         return None
 
     def _is_near_campfire(self) -> bool:
-        campfire_pos = self._get_campfire_position()
-        if campfire_pos is None:
+        campfires = esper.get_components(CampfireTag, Position, Health)
+        if not campfires:
+            return False
+        _, (_, pos, chp) = campfires[0]
+        if chp.current <= 0:
             return False
         player_pos = self._get_player_position()
-        return (
-            math.hypot(player_pos.x - campfire_pos.x, player_pos.y - campfire_pos.y)
-            < _SHOP_RANGE
-        )
+        return math.hypot(player_pos.x - pos.x, player_pos.y - pos.y) < _SHOP_RANGE
 
     def _spawn_bandit_near_player(self) -> None:
         player_pos = self._get_player_position()

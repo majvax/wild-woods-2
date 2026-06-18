@@ -45,10 +45,7 @@ class PickupProc(Processor):
                 campfires = esper.get_components(CampfireTag, Health)
                 if campfires:
                     _, (_, chp) = campfires[0]
-                    if chp.current > 0:
-                        chp.current = min(chp.current + 1, chp.max)
-            elif item_tag.kind == ItemKind.GOLD:
-                self._coin_sound.play()
+                    chp.current = min(chp.current + 1, chp.max)
 
         for item_ent in picked:
             esper.delete_entity(item_ent)
