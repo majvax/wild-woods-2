@@ -112,7 +112,10 @@ class GameScene(Scene):
                 dy = pos.y - campfire_pos.y
                 if math.hypot(dx, dy) < 700:
                     continue
-            create_bandit(pos, difficulty=self._difficulty_level + self._difficulty.enemy_level_offset)
+            create_bandit(
+                pos,
+                difficulty=self._difficulty_level + self._difficulty.enemy_level_offset,
+            )
             return
 
     def _on_game_over(self) -> None:
