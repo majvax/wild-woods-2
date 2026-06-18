@@ -82,7 +82,7 @@ class GameScene(Scene):
 
         esper.add_processor(RenderProc(self._screen, self._engine))
 
-        create_player(Position(0, 0))
+        create_player(Position(0, 0), health=self._difficulty.player_health)
         create_campfire(Position(0, 0 - 140))
         self._spawn_bandit_near_player()
 
@@ -112,7 +112,7 @@ class GameScene(Scene):
                 dy = pos.y - campfire_pos.y
                 if math.hypot(dx, dy) < 700:
                     continue
-            create_bandit(pos)
+            create_bandit(pos, difficulty=self._difficulty_level + self._difficulty.enemy_level_offset)
             return
 
     def _on_game_over(self) -> None:
@@ -141,7 +141,10 @@ class GameScene(Scene):
             self._difficulty_timer = 0.0
 
         self._elapsed_time += dt
-        spawn_interval = max(0.5, 4.0 - self._elapsed_time * 0.02)
+        spawn_interval = max(
+            self._difficulty.spawn_interval_min,
+            self._difficulty.spawn_interval_base - self._elapsed_time * 0.02,
+        )
 
         # Spawn bandits near player every 4 seconds
         self._timer += dt

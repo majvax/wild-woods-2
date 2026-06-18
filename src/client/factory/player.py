@@ -27,7 +27,7 @@ def _load_sequence(path_template: str, count: int) -> list[pygame.Surface]:
     ]
 
 
-def create_player(pos: Position):
+def create_player(pos: Position, health: int = 5):
     directions = ["up", "down", "left", "right"]
     dir_map = {
         "up": "up",
@@ -68,7 +68,7 @@ def create_player(pos: Position):
         Speed(300),
         Sprite(surface),
         PlayerTag(),
-        Health(5, 5),
+        Health(health, health),
         Invincibility(0),
         Inventory(),
         Hitbox(

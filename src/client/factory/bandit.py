@@ -65,8 +65,8 @@ def create_bandit(pos: Position, difficulty: int = 0):
     esper.create_entity(
         pos,
         Velocity(0, 0),
-        Speed(200 + difficulty * 5),
-        Health(10 + difficulty * 2, 10 + difficulty * 2),
+        Speed(200 + difficulty * 2),
+        Health(10 + difficulty, 10 + difficulty),
         DamageDealer(amount=1.0),
         Sprite(surface),
         Hitbox(
