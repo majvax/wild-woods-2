@@ -22,7 +22,13 @@ from client.component import (
     Weapon,
     WeaponKind,
 )
-from client.factory import build_weapon, buy_weapon, equip_weapon
+from client.factory import (
+    build_weapon,
+    buy_weapon,
+    equip_weapon,
+    upgrade_cadence,
+    upgrade_damage,
+)
 from client.factory.weapon import WEAPON_INFO
 from client.processor import DamageProc, ShootingProc, SpatialGridProc
 
@@ -37,6 +43,7 @@ def esper_world():
 
 
 def _make_player_with(arsenal: Arsenal, gold: int = 0) -> int:
+    """Create a player carrying ``arsenal`` and a live Weapon for its active kind."""
     inv = Inventory()
     if gold:
         inv.add(ItemKind.GOLD, gold)
@@ -50,7 +57,7 @@ def _make_player_with(arsenal: Arsenal, gold: int = 0) -> int:
         Hitbox(width=10, height=10),
         Invincibility(0),
         arsenal,
-        arsenal.owned[arsenal.active],
+        build_weapon(arsenal.active),
     )
     return ent
 
@@ -66,45 +73,73 @@ def test_build_weapon_sets_kind_and_is_fresh_instance():
     assert a is not b  # separate instances so upgrades don't leak
 
 
-def test_equip_weapon_switches_active_and_component(esper_world):
-    pistol = build_weapon(WeaponKind.PISTOL)
-    arsenal = Arsenal(owned={WeaponKind.PISTOL: pistol}, active=WeaponKind.PISTOL)
+def test_equip_weapon_switches_active_and_mutates_in_place(esper_world):
+    arsenal = Arsenal(owned={WeaponKind.PISTOL}, active=WeaponKind.PISTOL)
     ent = _make_player_with(arsenal)
-    arsenal.owned[WeaponKind.SMG] = build_weapon(WeaponKind.SMG)
+    weapon = esper.component_for_entity(ent, Weapon)
+    arsenal.owned.add(WeaponKind.SMG)
 
-    assert equip_weapon(ent, arsenal, WeaponKind.SMG) is True
+    assert equip_weapon(weapon, arsenal, WeaponKind.SMG) is True
     assert arsenal.active == WeaponKind.SMG
-    assert esper.component_for_entity(ent, Weapon).kind == WeaponKind.SMG
+    # Same component object, reconfigured in place (no esper world dependency).
+    assert weapon.kind == WeaponKind.SMG
+    assert esper.component_for_entity(ent, Weapon) is weapon
     # Re-equipping the already-active weapon is a no-op.
-    assert equip_weapon(ent, arsenal, WeaponKind.SMG) is False
+    assert equip_weapon(weapon, arsenal, WeaponKind.SMG) is False
     # Equipping an unowned weapon fails.
-    assert equip_weapon(ent, arsenal, WeaponKind.SNIPER) is False
+    assert equip_weapon(weapon, arsenal, WeaponKind.SNIPER) is False
 
 
 def test_buy_weapon_deducts_gold_and_equips(esper_world):
-    pistol = build_weapon(WeaponKind.PISTOL)
-    arsenal = Arsenal(owned={WeaponKind.PISTOL: pistol}, active=WeaponKind.PISTOL)
+    arsenal = Arsenal(owned={WeaponKind.PISTOL}, active=WeaponKind.PISTOL)
     price = WEAPON_INFO[WeaponKind.SHOTGUN].price
     ent = _make_player_with(arsenal, gold=price + 5)
+    weapon = esper.component_for_entity(ent, Weapon)
     inv = esper.component_for_entity(ent, Inventory)
 
-    assert buy_weapon(ent, arsenal, inv, WeaponKind.SHOTGUN) is True
+    assert buy_weapon(weapon, arsenal, inv, WeaponKind.SHOTGUN) is True
     assert WeaponKind.SHOTGUN in arsenal.owned
     assert arsenal.active == WeaponKind.SHOTGUN
+    assert weapon.kind == WeaponKind.SHOTGUN
     assert inv.count(ItemKind.GOLD) == 5
     # Buying again does nothing (already owned).
-    assert buy_weapon(ent, arsenal, inv, WeaponKind.SHOTGUN) is False
+    assert buy_weapon(weapon, arsenal, inv, WeaponKind.SHOTGUN) is False
 
 
 def test_buy_weapon_rejected_when_too_poor(esper_world):
-    pistol = build_weapon(WeaponKind.PISTOL)
-    arsenal = Arsenal(owned={WeaponKind.PISTOL: pistol}, active=WeaponKind.PISTOL)
+    arsenal = Arsenal(owned={WeaponKind.PISTOL}, active=WeaponKind.PISTOL)
     ent = _make_player_with(arsenal, gold=0)
+    weapon = esper.component_for_entity(ent, Weapon)
     inv = esper.component_for_entity(ent, Inventory)
 
-    assert buy_weapon(ent, arsenal, inv, WeaponKind.SNIPER) is False
+    assert buy_weapon(weapon, arsenal, inv, WeaponKind.SNIPER) is False
     assert WeaponKind.SNIPER not in arsenal.owned
     assert inv.count(ItemKind.GOLD) == 0
+
+
+def test_global_upgrades_apply_across_weapons(esper_world):
+    arsenal = Arsenal(
+        owned={WeaponKind.PISTOL, WeaponKind.SNIPER}, active=WeaponKind.PISTOL
+    )
+    ent = _make_player_with(arsenal)
+    weapon = esper.component_for_entity(ent, Weapon)
+
+    upgrade_damage(weapon, arsenal)
+    upgrade_cadence(weapon, arsenal)
+
+    pistol_tpl = WEAPON_INFO[WeaponKind.PISTOL].template
+    assert weapon.damage == max(1, round(pistol_tpl.damage * 1.25))
+    assert weapon.cooldown_max == pytest.approx(
+        max(0.05, pistol_tpl.cooldown_max * 0.9)
+    )
+
+    # Switching weapons keeps the global multipliers.
+    equip_weapon(weapon, arsenal, WeaponKind.SNIPER)
+    sniper_tpl = WEAPON_INFO[WeaponKind.SNIPER].template
+    assert weapon.damage == max(1, round(sniper_tpl.damage * 1.25))
+    assert weapon.cooldown_max == pytest.approx(
+        max(0.05, sniper_tpl.cooldown_max * 0.9)
+    )
 
 
 # --- shot geometry --------------------------------------------------------
@@ -140,10 +175,7 @@ def test_shooting_proc_shotgun_fires_all_pellets(esper_world, monkeypatch):
         lambda *a, **k: calls.append(k.get("pierce", False)),
     )
 
-    arsenal = Arsenal(
-        owned={WeaponKind.SHOTGUN: build_weapon(WeaponKind.SHOTGUN)},
-        active=WeaponKind.SHOTGUN,
-    )
+    arsenal = Arsenal(owned={WeaponKind.SHOTGUN}, active=WeaponKind.SHOTGUN)
     _make_player_with(arsenal)
 
     ShootingProc().process(0.016)
@@ -160,10 +192,7 @@ def test_shooting_proc_sniper_fires_one_piercing(esper_world, monkeypatch):
         lambda *a, **k: calls.append(k.get("pierce", False)),
     )
 
-    arsenal = Arsenal(
-        owned={WeaponKind.SNIPER: build_weapon(WeaponKind.SNIPER)},
-        active=WeaponKind.SNIPER,
-    )
+    arsenal = Arsenal(owned={WeaponKind.SNIPER}, active=WeaponKind.SNIPER)
     _make_player_with(arsenal)
 
     ShootingProc().process(0.016)
@@ -182,10 +211,7 @@ def test_piercing_projectile_hits_each_enemy_once_without_dying(
     )
 
     # Player required by DamageProc (it queries PlayerView each frame).
-    pistol = build_weapon(WeaponKind.PISTOL)
-    _make_player_with(
-        Arsenal(owned={WeaponKind.PISTOL: pistol}, active=WeaponKind.PISTOL)
-    )
+    _make_player_with(Arsenal(owned={WeaponKind.PISTOL}, active=WeaponKind.PISTOL))
 
     bullet = esper.create_entity(
         ProjectileTag(),

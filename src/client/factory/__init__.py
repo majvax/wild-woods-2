@@ -7,9 +7,12 @@ from .weapon import (
     WEAPON_INFO,
     WEAPON_ORDER,
     WeaponInfo,
+    apply_weapon,
     build_weapon,
     buy_weapon,
     equip_weapon,
+    upgrade_cadence,
+    upgrade_damage,
 )
 
 __all__ = [
@@ -22,7 +25,10 @@ __all__ = [
     "WEAPON_INFO",
     "WEAPON_ORDER",
     "WeaponInfo",
+    "apply_weapon",
     "build_weapon",
     "buy_weapon",
     "equip_weapon",
+    "upgrade_cadence",
+    "upgrade_damage",
 ]

@@ -1,7 +1,5 @@
 from dataclasses import dataclass, replace
 
-import esper
-
 from client.component import Arsenal, Inventory, ItemKind, Weapon, WeaponKind
 
 
@@ -77,21 +75,43 @@ WEAPON_INFO: dict[WeaponKind, WeaponInfo] = {
 
 
 def build_weapon(kind: WeaponKind) -> Weapon:
-    """Return a fresh Weapon instance for the given kind."""
+    """Return a fresh Weapon instance for the given kind (base stats)."""
     return replace(WEAPON_INFO[kind].template)
 
 
-def equip_weapon(ent: int, arsenal: Arsenal, kind: WeaponKind) -> bool:
-    """Make ``kind`` the active weapon if owned. Returns True on switch."""
-    weapon = arsenal.owned.get(kind)
-    if weapon is None or arsenal.active == kind:
+def apply_weapon(weapon: Weapon, arsenal: Arsenal, kind: WeaponKind) -> None:
+    """Reconfigure ``weapon`` in place to ``kind``, applying global upgrades.
+
+    The player keeps a single Weapon component; switching weapons mutates it
+    instead of swapping components, so this works regardless of which esper
+    world is active (the shop runs in its own world). Global damage/cadence
+    multipliers live on the arsenal and are re-derived from the template here,
+    so upgrades apply to every weapon and the result is idempotent.
+    """
+    tpl = WEAPON_INFO[kind].template
+    weapon.kind = kind
+    weapon.bullet_speed = tpl.bullet_speed
+    weapon.pellets = tpl.pellets
+    weapon.spread = tpl.spread
+    weapon.pierce = tpl.pierce
+    weapon.projectile_lifetime = tpl.projectile_lifetime
+    weapon.cooldown_max = max(0.05, tpl.cooldown_max * arsenal.cooldown_mult)
+    weapon.damage = max(1, round(tpl.damage * arsenal.damage_mult))
+    weapon.cooldown_current = 0.0
+
+
+def equip_weapon(weapon: Weapon, arsenal: Arsenal, kind: WeaponKind) -> bool:
+    """Make ``kind`` active if owned and not already active. True on switch."""
+    if kind not in arsenal.owned or arsenal.active == kind:
         return False
     arsenal.active = kind
-    esper.add_component(ent, weapon)
+    apply_weapon(weapon, arsenal, kind)
     return True
 
 
-def buy_weapon(ent: int, arsenal: Arsenal, inv: Inventory, kind: WeaponKind) -> bool:
+def buy_weapon(
+    weapon: Weapon, arsenal: Arsenal, inv: Inventory, kind: WeaponKind
+) -> bool:
     """Unlock and equip ``kind`` if affordable and not already owned."""
     if kind in arsenal.owned:
         return False
@@ -99,6 +119,19 @@ def buy_weapon(ent: int, arsenal: Arsenal, inv: Inventory, kind: WeaponKind) -> 
     if inv.count(ItemKind.GOLD) < price:
         return False
     inv.counts[ItemKind.GOLD] = inv.count(ItemKind.GOLD) - price
-    arsenal.owned[kind] = build_weapon(kind)
-    equip_weapon(ent, arsenal, kind)
+    arsenal.owned.add(kind)
+    arsenal.active = kind
+    apply_weapon(weapon, arsenal, kind)
     return True
+
+
+def upgrade_cadence(weapon: Weapon, arsenal: Arsenal) -> None:
+    """Global fire-rate upgrade: -10% cooldown on all weapons."""
+    arsenal.cooldown_mult *= 0.9
+    apply_weapon(weapon, arsenal, arsenal.active)
+
+
+def upgrade_damage(weapon: Weapon, arsenal: Arsenal) -> None:
+    """Global damage upgrade: +25% damage on all weapons."""
+    arsenal.damage_mult *= 1.25
+    apply_weapon(weapon, arsenal, arsenal.active)

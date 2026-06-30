@@ -9,8 +9,6 @@ from client.component import (
     DamageDealer,
     EnemyTag,
     Health,
-    ItemKind,
-    ItemTag,
     LootTable,
     PatrolRuntime,
     PatrolSettings,
@@ -25,7 +23,6 @@ from client.factory import (
     EnemyArchetype,
     create_bandit,
     create_enemy,
-    create_item,
     create_player,
 )
 

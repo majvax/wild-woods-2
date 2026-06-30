@@ -166,10 +166,11 @@ class GameScene(Scene):
         if not (0 <= index < len(WEAPON_ORDER)):
             return
         player = PlayerView.get()
+        weapon = player.weapon()
         arsenal = player.arsenal()
-        if arsenal is None:
+        if weapon is None or arsenal is None:
             return
-        equip_weapon(player.ent, arsenal, WEAPON_ORDER[index])
+        equip_weapon(weapon, arsenal, WEAPON_ORDER[index])
 
     def _on_game_over(self) -> None:
         self._game_over_requested = True
@@ -245,7 +246,6 @@ class GameScene(Scene):
                     self._on_win,
                     self._shop_counts,
                     arsenal,
-                    player.ent,
                 )
                 return True
 

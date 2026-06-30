@@ -26,15 +26,17 @@ class Weapon:
 
 @dataclass
 class Arsenal:
-    """Weapons the player owns and which one is active.
+    """Weapons the player owns, the active one, and global upgrade multipliers.
 
-    The active weapon instance is also the entity's ``Weapon`` component, so
-    switching swaps that component to the stored instance (preserving each
-    weapon's own upgrades and cooldown).
+    The player keeps a single ``Weapon`` component; switching mutates it in
+    place from the active kind's template combined with these multipliers, so
+    damage/cadence upgrades are global (apply to every weapon).
     """
 
-    owned: dict[WeaponKind, Weapon] = field(default_factory=dict)
+    owned: set[WeaponKind] = field(default_factory=lambda: {WeaponKind.PISTOL})
     active: WeaponKind = WeaponKind.PISTOL
+    damage_mult: float = 1.0
+    cooldown_mult: float = 1.0
 
 
 @dataclass

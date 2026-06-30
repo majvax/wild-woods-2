@@ -7,7 +7,14 @@ import pygame
 
 from client.component import Arsenal, Health, Inventory, ItemKind, Weapon, WeaponKind
 from client.core import Engine
-from client.factory import WEAPON_INFO, WEAPON_ORDER, buy_weapon, equip_weapon
+from client.factory import (
+    WEAPON_INFO,
+    WEAPON_ORDER,
+    buy_weapon,
+    equip_weapon,
+    upgrade_cadence,
+    upgrade_damage,
+)
 from client.ui.components import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -44,7 +51,6 @@ class ShopScene(Scene):
         on_win: Callable[[], None],
         purchase_counts: list[int],
         arsenal: Arsenal,
-        player_ent: int,
     ):
         super().__init__()
         self._engine = engine
@@ -55,19 +61,22 @@ class ShopScene(Scene):
         self._on_win = on_win
         self._purchase_counts = purchase_counts
         self._arsenal = arsenal
-        self._player_ent = player_ent
 
         self._upgrades = [
             _Upgrade("+1 Vie", "Augmente les PV max de 1", 5, 1, purchase_counts[0]),
             _Upgrade(
                 "Cadence +10%",
-                "Réduit le délai de tir de 10%",
+                "−10% délai de tir (toutes armes)",
                 2,
                 2,
                 purchase_counts[1],
             ),
             _Upgrade(
-                "Dégâts +25%", "Augmente les dégâts de 25%", 2, 1, purchase_counts[2]
+                "Dégâts +25%",
+                "+25% dégâts (toutes armes)",
+                2,
+                1,
+                purchase_counts[2],
             ),
         ]
 
@@ -110,9 +119,6 @@ class ShopScene(Scene):
         self._btn_win.rect.width = w - 160
         self._btn_win.rect.height = 70
 
-    def _active_weapon(self) -> Weapon:
-        return self._arsenal.owned[self._arsenal.active]
-
     def _buy(self, i: int) -> None:
         upg = self._upgrades[i]
         gold = self._inv.count(ItemKind.GOLD)
@@ -121,20 +127,19 @@ class ShopScene(Scene):
         self._inv.counts[ItemKind.GOLD] = gold - upg.cost()
         upg.count += 1
         self._purchase_counts[i] = upg.count
-        weapon = self._active_weapon()
         if i == 0:
             self._hp.max += 1
             self._hp.current += 1
         elif i == 1:
-            weapon.cooldown_max = max(0.05, weapon.cooldown_max * 0.9)
+            upgrade_cadence(self._weapon, self._arsenal)
         else:
-            weapon.damage = max(1, int(weapon.damage * 1.25))
+            upgrade_damage(self._weapon, self._arsenal)
 
     def _weapon_click(self, kind: WeaponKind) -> None:
         if kind in self._arsenal.owned:
-            equip_weapon(self._player_ent, self._arsenal, kind)
+            equip_weapon(self._weapon, self._arsenal, kind)
         else:
-            buy_weapon(self._player_ent, self._arsenal, self._inv, kind)
+            buy_weapon(self._weapon, self._arsenal, self._inv, kind)
 
     def _buy_win(self) -> None:
         gold = self._inv.count(ItemKind.GOLD)
