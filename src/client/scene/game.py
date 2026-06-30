@@ -13,7 +13,12 @@ from client.core import (
     Difficulty,
     Engine,
 )
-from client.factory import create_bandit, create_campfire, create_player
+from client.factory import (
+    EnemyArchetype,
+    create_campfire,
+    create_enemy,
+    create_player,
+)
 from client.processor import (
     AnimationProc,
     BrainProc,
@@ -41,6 +46,17 @@ from .pause import PauseScene
 from .scene import Scene
 
 _SHOP_RANGE = 200.0
+
+
+# Spawn weight per archetype as a function of difficulty level. Early on it is
+# bandits only; Scouts join around level 2 and Brutes around level 4, and their
+# relative share grows as the run gets harder.
+def _spawn_weights(level: int) -> dict[EnemyArchetype, float]:
+    return {
+        EnemyArchetype.BANDIT: 6.0,
+        EnemyArchetype.SCOUT: max(0.0, level - 1) * 1.5,
+        EnemyArchetype.BRUTE: max(0.0, level - 3) * 1.0,
+    }
 
 
 @final
@@ -130,11 +146,17 @@ class GameScene(Scene):
                 dy = pos.y - campfire_pos.y
                 if math.hypot(dx, dy) < 700:
                     continue
-            create_bandit(
+            create_enemy(
                 pos,
+                self._pick_archetype(),
                 difficulty=self._difficulty_level + self._difficulty.enemy_level_offset,
             )
             return
+
+    def _pick_archetype(self) -> EnemyArchetype:
+        weights = _spawn_weights(self._difficulty_level)
+        archetypes = list(weights.keys())
+        return random.choices(archetypes, weights=list(weights.values()))[0]
 
     def _on_game_over(self) -> None:
         self._game_over_requested = True
