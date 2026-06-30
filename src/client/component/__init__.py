@@ -1,5 +1,6 @@
 from .ai import AI, AIState, PatrolRuntime, PatrolSettings
 from .damage import DamageDealer, Health, Invincibility
+from .dash import Dash
 from .gameplay import (
     AnimationClip,
     AnimationRuntime,
@@ -44,6 +45,7 @@ __all__ = [
     "Health",
     "DamageDealer",
     "Invincibility",
+    "Dash",
     "Weapon",
     "Lifetime",
     "Hitbox",

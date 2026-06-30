@@ -3,6 +3,7 @@ from .brain import BrainProc
 from .campfire import CampfireProc
 from .collision import CollisionProc
 from .damage import DamageProc
+from .dash import DashProc
 from .input import InputProc
 from .lifetime import LifetimeProc
 from .loot import LootProc
@@ -21,6 +22,7 @@ __all__ = [
     "CampfireProc",
     "CollisionProc",
     "DamageProc",
+    "DashProc",
     "InputProc",
     "LootProc",
     "MovementProc",

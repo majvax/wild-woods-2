@@ -24,6 +24,7 @@ from client.processor import (
     BrainProc,
     CampfireProc,
     CollisionProc,
+    DashProc,
     DirectionalAnimationProc,
     InputProc,
     LifetimeProc,
@@ -89,6 +90,7 @@ class GameScene(Scene):
         pygame.mixer.music.load("assets/sound/main-music.mp3")
         pygame.mixer.music.play(-1)
         esper.add_processor(InputProc())
+        esper.add_processor(DashProc())
         esper.add_processor(TargetingProc())
         esper.add_processor(BrainProc())
         esper.add_processor(LootProc())

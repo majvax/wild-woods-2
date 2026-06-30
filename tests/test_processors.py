@@ -1,5 +1,6 @@
 import math
 import uuid
+from collections import defaultdict
 
 import esper
 import pygame
@@ -9,6 +10,9 @@ from client.component import (
     AI,
     AIState,
     CampfireTag,
+    DamageDealer,
+    Dash,
+    DirectionalAnimation,
     EnemyTag,
     Health,
     Hitbox,
@@ -25,9 +29,12 @@ from client.component import (
 )
 from client.processor import (
     BrainProc,
+    DamageProc,
+    DashProc,
     InputProc,
     LootProc,
     MovementProc,
+    SpatialGridProc,
     TargetingProc,
 )
 
@@ -296,3 +303,94 @@ def test_movement_proc_updates_position(esper_world):
     pos = esper.component_for_entity(ent, Position)
     assert pos.x == pytest.approx(6.0)
     assert pos.y == pytest.approx(-0.5)
+
+
+def _shift_keys(*pressed: int) -> "defaultdict[int, bool]":
+    keys: defaultdict[int, bool] = defaultdict(bool)
+    for key in pressed:
+        keys[key] = True
+    return keys
+
+
+def test_dash_proc_triggers_on_shift_tap_while_moving(esper_world, monkeypatch):
+    monkeypatch.setattr(pygame.key, "get_pressed", lambda: _shift_keys(pygame.K_LSHIFT))
+
+    ent = _make_player(vel=Velocity(100, 0))
+    esper.add_component(ent, Dash())
+
+    DashProc().process(0.016)
+
+    dash = esper.component_for_entity(ent, Dash)
+    vel = esper.component_for_entity(ent, Velocity)
+    assert dash.active_time == pytest.approx(dash.duration)
+    assert dash.cooldown_time == pytest.approx(dash.cooldown)
+    assert math.hypot(vel.vx, vel.vy) == pytest.approx(dash.speed)
+    assert vel.vx > 0 and vel.vy == pytest.approx(0.0)
+
+
+def test_dash_proc_idle_dash_uses_facing(esper_world, monkeypatch):
+    monkeypatch.setattr(pygame.key, "get_pressed", lambda: _shift_keys(pygame.K_LSHIFT))
+
+    ent = _make_player(vel=Velocity(0, 0))
+    esper.add_component(ent, Dash())
+    esper.add_component(
+        ent,
+        DirectionalAnimation(
+            idle_prefix="idle",
+            move_prefix="run",
+            last_direction="right",
+            speed_threshold=0.01,
+        ),
+    )
+
+    DashProc().process(0.016)
+
+    dash = esper.component_for_entity(ent, Dash)
+    assert (dash.dir_x, dash.dir_y) == pytest.approx((1.0, 0.0))
+
+
+def test_dash_proc_cooldown_blocks_redash(esper_world, monkeypatch):
+    monkeypatch.setattr(pygame.key, "get_pressed", lambda: _shift_keys(pygame.K_LSHIFT))
+
+    ent = _make_player(vel=Velocity(100, 0))
+    esper.add_component(ent, Dash(cooldown_time=1.0))
+
+    DashProc().process(0.016)
+
+    dash = esper.component_for_entity(ent, Dash)
+    vel = esper.component_for_entity(ent, Velocity)
+    assert dash.active_time == 0.0
+    assert vel.vx == pytest.approx(100.0)
+
+
+def test_dash_proc_requires_fresh_press(esper_world, monkeypatch):
+    monkeypatch.setattr(pygame.key, "get_pressed", lambda: _shift_keys(pygame.K_LSHIFT))
+
+    ent = _make_player(vel=Velocity(100, 0))
+    esper.add_component(ent, Dash())
+
+    proc = DashProc()
+    proc._prev_shift = True  # shift already held last frame -> no rising edge
+    proc.process(0.016)
+
+    dash = esper.component_for_entity(ent, Dash)
+    assert dash.active_time == 0.0
+
+
+def test_dash_iframes_prevent_contact_damage(esper_world, monkeypatch):
+    monkeypatch.setattr(pygame.mixer, "Sound", lambda _: pygame.mixer.Channel)
+
+    player_id = _make_player(Position(0, 0))
+    esper.add_component(player_id, Dash(active_time=0.1))
+    esper.create_entity(
+        EnemyTag(),
+        DamageDealer(amount=5.0),
+        Position(0, 0),
+        Hitbox(width=10, height=10),
+    )
+
+    SpatialGridProc().process(0.016)
+    DamageProc().process(0.016)
+
+    hp = esper.component_for_entity(player_id, Health)
+    assert hp.current == 10  # untouched while dashing

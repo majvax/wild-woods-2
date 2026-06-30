@@ -6,6 +6,7 @@ from esper import Processor
 
 from client.component import (
     CampfireTag,
+    Dash,
     Health,
     Hitbox,
     ItemKind,
@@ -213,3 +214,26 @@ class RenderProc(Processor):
         else:
             gold_text = self.font.render(f"Gold: {gold}", True, pygame.Color("black"))
             self.screen.blit(gold_text, (10, y))
+
+        self._draw_dash_bar(player, y + self.font.get_linesize() + 6)
+
+    def _draw_dash_bar(self, player: PlayerView, y: int) -> None:
+        try:
+            dash = esper.component_for_entity(player.ent, Dash)
+        except KeyError:
+            return
+
+        bar_w = 120
+        bar_h = 10
+        bar_x = 10
+        ready = dash.cooldown_time <= 0
+        ratio = 1.0 if ready else 1.0 - dash.cooldown_time / dash.cooldown
+        ratio = max(0.0, min(1.0, ratio))
+
+        pygame.draw.rect(self.screen, (40, 40, 40), (bar_x, y, bar_w, bar_h))
+        fill_color = (0, 220, 255) if ready else (0, 110, 140)
+        pygame.draw.rect(self.screen, fill_color, (bar_x, y, int(bar_w * ratio), bar_h))
+        label = self.font.render("Dash [Maj]", True, pygame.Color("black"))
+        self.screen.blit(
+            label, (bar_x + bar_w + 8, y - (label.get_height() - bar_h) // 2)
+        )

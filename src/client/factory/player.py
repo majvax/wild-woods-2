@@ -6,6 +6,7 @@ from client.component import (
     AnimationRuntime,
     AnimationSet,
     AnimationState,
+    Dash,
     DirectionalAnimation,
     Health,
     Hitbox,
@@ -70,6 +71,7 @@ def create_player(pos: Position, health: int = 5):
         PlayerTag(),
         Health(health, health),
         Invincibility(0),
+        Dash(),
         Inventory(),
         Hitbox(
             width=true_rect.width,

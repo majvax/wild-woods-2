@@ -6,6 +6,7 @@ import esper
 from client.component import (
     CampfireTag,
     DamageDealer,
+    Dash,
     EnemyTag,
     Health,
     Hitbox,
@@ -52,6 +53,14 @@ class DamageProc(esper.Processor):
         player.invincibility.time -= dt
         if player.invincibility.time > 0:
             return
+
+        # Dashing grants i-frames without using Invincibility, so the hurt
+        # flash (keyed on invincibility.time) is not triggered while dodging.
+        try:
+            if esper.component_for_entity(player.ent, Dash).active_time > 0:
+                return
+        except KeyError:
+            pass
 
         p_bounds = hitbox_bounds(player.pos, player.hitbox)
         for ent in _aabb_candidates(get_active_grid(), p_bounds, player.ent):
