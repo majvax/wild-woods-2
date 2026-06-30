@@ -1,20 +1,13 @@
+import random
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from functools import partial
 from typing import cast, final, override
 
 import pygame
 
-from client.component import Arsenal, Health, Inventory, ItemKind, Weapon, WeaponKind
+from client.component import ItemKind
 from client.core import Engine
-from client.factory import (
-    WEAPON_INFO,
-    WEAPON_ORDER,
-    buy_weapon,
-    equip_weapon,
-    upgrade_cadence,
-    upgrade_damage,
-)
+from client.factory import Offer, OfferCategory, ShopContext, draft, eligible_offers
 from client.ui.components import NEON_PURPLE, Button
 
 from .scene import Scene
@@ -23,21 +16,23 @@ _GOLD = pygame.Color(255, 215, 0)
 _WHITE = pygame.Color(255, 255, 255)
 _GRAY = pygame.Color(160, 160, 180)
 _BORDER = pygame.Color(106, 79, 207)
-_ACTIVE_BORDER = pygame.Color(160, 125, 255)
 _RED = pygame.Color(200, 70, 70)
 _GREEN = pygame.Color(120, 210, 120)
 
+_CATEGORY_LABEL: dict[OfferCategory, str] = {
+    OfferCategory.PERK: "Amélioration",
+    OfferCategory.WEAPON: "Arme",
+    OfferCategory.OBJECT: "Objet",
+}
+_CATEGORY_COLOR: dict[OfferCategory, pygame.Color] = {
+    OfferCategory.PERK: pygame.Color(160, 125, 255),
+    OfferCategory.WEAPON: _GOLD,
+    OfferCategory.OBJECT: _GREEN,
+}
 
-@dataclass
-class _Upgrade:
-    label: str
-    desc: str
-    base_cost: int
-    increment: int
-    count: int = field(default=0)
-
-    def cost(self) -> int:
-        return self.base_cost + self.count * self.increment
+_DRAFT_SIZE = 3
+_REROLL_BASE = 3
+_REROLL_GROWTH = 2
 
 
 @final
@@ -45,49 +40,19 @@ class ShopScene(Scene):
     def __init__(
         self,
         engine: Engine,
-        hp: Health,
-        weapon: Weapon,
-        inv: Inventory,
+        ctx: ShopContext,
         on_win: Callable[[], None],
-        purchase_counts: list[int],
-        arsenal: Arsenal,
     ):
         super().__init__()
         self._engine = engine
         self._screen = engine.screen
-        self._hp = hp
-        self._weapon = weapon
-        self._inv = inv
+        self._ctx = ctx
         self._on_win = on_win
-        self._purchase_counts = purchase_counts
-        self._arsenal = arsenal
-
-        self._upgrades = [
-            _Upgrade("+1 Vie", "Augmente les PV max de 1", 5, 1, purchase_counts[0]),
-            _Upgrade(
-                "Cadence +10%",
-                "−10% délai de tir (toutes armes)",
-                2,
-                2,
-                purchase_counts[1],
-            ),
-            _Upgrade(
-                "Dégâts +25%",
-                "+25% dégâts (toutes armes)",
-                2,
-                1,
-                purchase_counts[2],
-            ),
-        ]
-
-        # Weapons that can be unlocked (the pistol is free / always owned).
-        self._weapon_kinds = [k for k in WEAPON_ORDER if WEAPON_INFO[k].price > 0]
+        self._rerolls = 0
+        self._offers: list[Offer | None] = list(draft(ctx, _DRAFT_SIZE))
 
         w, h = self._screen.get_size()
-
-        # Capture the rendered game frame — push happens after esper.process so it's fresh
         self._bg = engine.screen.copy()
-
         self._overlay = pygame.Surface((w, h), pygame.SRCALPHA)
         self._overlay.fill((10, 5, 20, 160))
 
@@ -99,53 +64,54 @@ class ShopScene(Scene):
 
         self._btns = [
             Button("Acheter", NEON_PURPLE, 14, 8, 8, 18, on_click=partial(self._buy, i))
-            for i in range(3)
+            for i in range(_DRAFT_SIZE)
         ]
-        # Sized to the widest label; text/action set per frame in _draw_weapon_card.
-        self._weapon_btns = [
-            Button("Acheter (00)", NEON_PURPLE, 14, 8, 8, 18)
-            for _ in self._weapon_kinds
-        ]
-
-        self._btn_win = Button(
-            "VICTOIRE - 100 pièces",
-            NEON_PURPLE,
-            20,
-            14,
-            10,
-            22,
-            on_click=self._buy_win,
+        self._btn_reroll = Button(
+            "Relancer", NEON_PURPLE, 16, 10, 8, 18, on_click=self._reroll
         )
-        self._btn_win.rect.width = w - 160
-        self._btn_win.rect.height = 70
+        self._btn_win = Button(
+            "VICTOIRE - 100 pièces", NEON_PURPLE, 20, 14, 10, 22, on_click=self._buy_win
+        )
+
+    def _gold(self) -> int:
+        return self._ctx.inv.count(ItemKind.GOLD)
+
+    def _reroll_cost(self) -> int:
+        return _REROLL_BASE + _REROLL_GROWTH * self._rerolls
+
+    def _reroll(self) -> None:
+        cost = self._reroll_cost()
+        if self._gold() < cost:
+            return
+        self._ctx.inv.counts[ItemKind.GOLD] = self._gold() - cost
+        self._rerolls += 1
+        self._offers = list(draft(self._ctx, _DRAFT_SIZE))
 
     def _buy(self, i: int) -> None:
-        upg = self._upgrades[i]
-        gold = self._inv.count(ItemKind.GOLD)
-        if gold < upg.cost():
+        if i >= len(self._offers):
             return
-        self._inv.counts[ItemKind.GOLD] = gold - upg.cost()
-        upg.count += 1
-        self._purchase_counts[i] = upg.count
-        if i == 0:
-            self._hp.max += 1
-            self._hp.current += 1
-        elif i == 1:
-            upgrade_cadence(self._weapon, self._arsenal)
-        else:
-            upgrade_damage(self._weapon, self._arsenal)
+        offer = self._offers[i]
+        if offer is None:
+            return
+        cost = offer.cost(self._ctx)
+        if self._gold() < cost:
+            return
+        self._ctx.inv.counts[ItemKind.GOLD] = self._gold() - cost
+        offer.apply(self._ctx)
+        self._ctx.counts[offer.id] = self._ctx.counts.get(offer.id, 0) + 1
+        if not offer.repeatable:
+            self._offers[i] = self._replacement(offer)
 
-    def _weapon_click(self, kind: WeaponKind) -> None:
-        if kind in self._arsenal.owned:
-            equip_weapon(self._weapon, self._arsenal, kind)
-        else:
-            buy_weapon(self._weapon, self._arsenal, self._inv, kind)
+    def _replacement(self, sold: Offer) -> Offer | None:
+        """Pick a fresh eligible offer not already on display (or None)."""
+        shown = {o.id for o in self._offers if o is not None and o.id != sold.id}
+        pool = [o for o in eligible_offers(self._ctx) if o.id not in shown]
+        return random.choice(pool) if pool else None
 
     def _buy_win(self) -> None:
-        gold = self._inv.count(ItemKind.GOLD)
-        if gold < 100:
+        if self._gold() < 100:
             return
-        self._inv.counts[ItemKind.GOLD] = gold - 100
+        self._ctx.inv.counts[ItemKind.GOLD] = self._gold() - 100
         self._on_win()
 
     @override
@@ -158,40 +124,49 @@ class ShopScene(Scene):
         y: int,
         cw: int,
         ch: int,
-        title: str,
-        desc: str,
-        mid: str,
-        bottom: str,
-        bottom_color: pygame.Color,
+        offer: Offer | None,
         btn: Button,
         dt: float,
         events: list[pygame.event.Event],
-        active: bool = False,
     ) -> None:
         cx = x + cw // 2
         card_surf = pygame.Surface((cw, ch), pygame.SRCALPHA)
         card_surf.fill((20, 15, 40, 230))
+        border = _CATEGORY_COLOR[offer.category] if offer is not None else _BORDER
         pygame.draw.rect(
-            card_surf,
-            _ACTIVE_BORDER if active else _BORDER,
-            card_surf.get_rect(),
-            width=3 if active else 2,
-            border_radius=12,
+            card_surf, border, card_surf.get_rect(), width=2, border_radius=12
         )
         self._screen.blit(card_surf, (x, y))
 
-        name_s = self._font_name.render(title, True, _WHITE)
-        self._screen.blit(name_s, name_s.get_rect(centerx=cx, top=y + 16))
+        if offer is None:
+            empty = self._font_small.render("—", True, _GRAY)
+            self._screen.blit(empty, empty.get_rect(center=(cx, y + ch // 2)))
+            return
 
-        desc_s = self._font_small.render(desc, True, _GRAY)
-        self._screen.blit(desc_s, desc_s.get_rect(centerx=cx, top=y + 50))
+        tag = self._font_small.render(
+            _CATEGORY_LABEL[offer.category], True, _CATEGORY_COLOR[offer.category]
+        )
+        self._screen.blit(tag, tag.get_rect(centerx=cx, top=y + 12))
 
-        mid_s = self._font_small.render(mid, True, _GRAY)
-        self._screen.blit(mid_s, mid_s.get_rect(centerx=cx, top=y + 74))
+        name_s = self._font_name.render(offer.name, True, _WHITE)
+        self._screen.blit(name_s, name_s.get_rect(centerx=cx, top=y + 36))
 
-        bottom_s = self._font_name.render(bottom, True, bottom_color)
-        self._screen.blit(bottom_s, bottom_s.get_rect(centerx=cx, top=y + 100))
+        desc_s = self._font_small.render(offer.desc, True, _GRAY)
+        self._screen.blit(desc_s, desc_s.get_rect(centerx=cx, top=y + 72))
 
+        if offer.repeatable:
+            count = self._ctx.counts.get(offer.id, 0)
+            mid = self._font_small.render(f"Acheté : {count}×", True, _GRAY)
+            self._screen.blit(mid, mid.get_rect(centerx=cx, top=y + 98))
+
+        gold = self._gold()
+        cost = offer.cost(self._ctx)
+        cost_s = self._font_name.render(
+            f"{cost} pièces", True, _GOLD if gold >= cost else _RED
+        )
+        self._screen.blit(cost_s, cost_s.get_rect(centerx=cx, top=y + 122))
+
+        btn.enabled = gold >= cost
         btn.set_rect(cx, y + ch - btn.rect.height - 18)
         btn.update(dt, events)
         btn.draw(self._screen)
@@ -208,98 +183,40 @@ class ShopScene(Scene):
         self._screen.blit(self._bg, (0, 0))
         self._screen.blit(self._overlay, (0, 0))
 
-        # Title
         title_s = self._font_title.render("BOUTIQUE", True, _WHITE)
         self._screen.blit(title_s, title_s.get_rect(center=(w // 2, 56)))
 
-        # Gold + currently equipped weapon
-        gold = self._inv.count(ItemKind.GOLD)
+        gold = self._gold()
         gold_s = self._font_gold.render(f"Or : {gold}", True, _GOLD)
-        self._screen.blit(gold_s, gold_s.get_rect(center=(w // 2, 104)))
-        active_name = WEAPON_INFO[self._arsenal.active].name
-        arme_s = self._font_small.render(f"Arme : {active_name}", True, _GRAY)
-        self._screen.blit(arme_s, arme_s.get_rect(center=(w // 2, 130)))
+        self._screen.blit(gold_s, gold_s.get_rect(center=(w // 2, 108)))
 
-        # Layout: two rows of three cards between the header and the win button.
-        win_h = 70
-        win_top = h - win_h - 20
-        content_top = 150
-        content_bottom = win_top - 20
-        row_gap = 16
-        row_h = (content_bottom - content_top - row_gap) // 2
-        card_w = (w - 160 - 40) // 3
-
-        def card_x(i: int) -> int:
-            return 80 + i * (card_w + 20)
-
-        # Row 1: stat upgrades
-        for i, (upg, btn) in enumerate(zip(self._upgrades, self._btns)):
-            cost = upg.cost()
-            btn.enabled = gold >= cost
+        # Single row of draft cards
+        card_top = 160
+        card_h = 320
+        card_w = (w - 160 - 40) // _DRAFT_SIZE
+        for i in range(_DRAFT_SIZE):
+            x = 80 + i * (card_w + 20)
+            offer = self._offers[i] if i < len(self._offers) else None
             self._draw_card(
-                card_x(i),
-                content_top,
-                card_w,
-                row_h,
-                upg.label,
-                upg.desc,
-                f"Acheté : {upg.count}×",
-                f"{cost} pièces",
-                _GOLD if gold >= cost else _RED,
-                btn,
-                dt,
-                events,
+                x, card_top, card_w, card_h, offer, self._btns[i], dt, events
             )
 
-        # Row 2: weapons (buy or equip)
-        weapons_y = content_top + row_h + row_gap
-        for i, (kind, btn) in enumerate(zip(self._weapon_kinds, self._weapon_btns)):
-            info = WEAPON_INFO[kind]
-            tpl = info.template
-            owned = kind in self._arsenal.owned
-            active = self._arsenal.active == kind
-
-            if not owned:
-                btn.text = f"Acheter ({info.price})"
-                btn.enabled = gold >= info.price
-                bottom, bottom_color = (
-                    f"{info.price} pièces",
-                    (_GOLD if gold >= info.price else _RED),
-                )
-            elif active:
-                btn.text = "Équipé"
-                btn.enabled = False
-                bottom, bottom_color = "Équipé", _GREEN
-            else:
-                btn.text = "Équiper"
-                btn.enabled = True
-                bottom, bottom_color = "Possédé", _GREEN
-            btn.on_click = partial(self._weapon_click, kind)
-
-            self._draw_card(
-                card_x(i),
-                weapons_y,
-                card_w,
-                row_h,
-                info.name,
-                info.desc,
-                f"Dég. {tpl.damage} · Cadence {tpl.cooldown_max:g}s",
-                bottom,
-                bottom_color,
-                btn,
-                dt,
-                events,
-                active=active,
-            )
+        # Reroll button under the cards
+        reroll_cost = self._reroll_cost()
+        self._btn_reroll.text = f"Relancer ({reroll_cost})"
+        self._btn_reroll.enabled = gold >= reroll_cost
+        self._btn_reroll.set_rect(w // 2, card_top + card_h + 24)
+        self._btn_reroll.update(dt, events)
+        self._btn_reroll.draw(self._screen)
 
         # Win button (wide, bottom)
         self._btn_win.enabled = gold >= 100
         self._btn_win.rect.width = w - 160
-        self._btn_win.set_rect(w // 2, win_top)
+        self._btn_win.rect.height = 64
+        self._btn_win.set_rect(w // 2, h - 64 - 20)
         self._btn_win.update(dt, events)
         self._btn_win.draw(self._screen)
 
-        # Close hint
         hint_s = self._font_hint.render(
             "E — Fermer  ·  1-4 — Changer d'arme", True, _GRAY
         )

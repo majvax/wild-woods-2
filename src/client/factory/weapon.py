@@ -109,6 +109,13 @@ def equip_weapon(weapon: Weapon, arsenal: Arsenal, kind: WeaponKind) -> bool:
     return True
 
 
+def unlock_weapon(weapon: Weapon, arsenal: Arsenal, kind: WeaponKind) -> None:
+    """Add ``kind`` to the arsenal and equip it (no gold handling)."""
+    arsenal.owned.add(kind)
+    arsenal.active = kind
+    apply_weapon(weapon, arsenal, kind)
+
+
 def buy_weapon(
     weapon: Weapon, arsenal: Arsenal, inv: Inventory, kind: WeaponKind
 ) -> bool:
@@ -119,9 +126,7 @@ def buy_weapon(
     if inv.count(ItemKind.GOLD) < price:
         return False
     inv.counts[ItemKind.GOLD] = inv.count(ItemKind.GOLD) - price
-    arsenal.owned.add(kind)
-    arsenal.active = kind
-    apply_weapon(weapon, arsenal, kind)
+    unlock_weapon(weapon, arsenal, kind)
     return True
 
 

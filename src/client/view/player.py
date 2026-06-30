@@ -5,10 +5,13 @@ import esper
 
 from client.component import (
     Arsenal,
+    Aura,
     Health,
     Hitbox,
     Inventory,
     Invincibility,
+    Objects,
+    Perks,
     PlayerTag,
     Position,
     Speed,
@@ -61,5 +64,23 @@ class PlayerView:
     def arsenal(self) -> Arsenal | None:
         try:
             return esper.component_for_entity(self.ent, Arsenal)
+        except KeyError:
+            return None
+
+    def perks(self) -> Perks | None:
+        try:
+            return esper.component_for_entity(self.ent, Perks)
+        except KeyError:
+            return None
+
+    def objects(self) -> Objects | None:
+        try:
+            return esper.component_for_entity(self.ent, Objects)
+        except KeyError:
+            return None
+
+    def aura(self) -> Aura | None:
+        try:
+            return esper.component_for_entity(self.ent, Aura)
         except KeyError:
             return None

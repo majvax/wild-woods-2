@@ -12,6 +12,8 @@ from .gameplay import (
 )
 from .hitbox import Hitbox, aabb_overlap, hitbox_bounds
 from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
+from .objects import Aura, ObjectKind, Objects
+from .perks import Perks
 from .physics import Orientation, Position, Speed, Velocity
 from .tags import CampfireTag, EnemyTag, PlayerTag, ProjectileTag
 from .targeting import Targeting
@@ -50,6 +52,10 @@ __all__ = [
     "WeaponKind",
     "Arsenal",
     "Piercing",
+    "Perks",
+    "Objects",
+    "ObjectKind",
+    "Aura",
     "Lifetime",
     "Hitbox",
     "hitbox_bounds",

@@ -10,6 +10,7 @@ from client.component import (
     Health,
     Hitbox,
     ItemKind,
+    ObjectKind,
     Position,
     Sprite,
     EnemyTag,
@@ -27,6 +28,8 @@ from client.processor.damage import INVINCIBILITY_AFTER_HIT
 from client.view.player import PlayerView
 
 _INVENTORY_ICON_SIZE = 18
+
+_OBJECT_NAMES: dict[ObjectKind, str] = {ObjectKind.ONION: "Oignon"}
 
 
 @final
@@ -61,6 +64,17 @@ class RenderProc(Processor):
         offset_x, offset_y = self._camera.update(player_pos, dt, width, height)
 
         draw_tiled_background(self.screen, self._background, offset_x, offset_y)
+
+        aura = player.aura()
+        if aura is not None and aura.active:
+            r = int(aura.radius)
+            aura_surf = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
+            pygame.draw.circle(aura_surf, (120, 220, 120, 45), (r, r), r)
+            pygame.draw.circle(aura_surf, (150, 240, 150, 110), (r, r), r, 2)
+            self.screen.blit(
+                aura_surf,
+                (player_pos.x + offset_x - r, player_pos.y + offset_y - r),
+            )
 
         for _, (pos, sprite) in esper.get_components(Position, Sprite):
             self.screen.blit(
@@ -219,6 +233,25 @@ class RenderProc(Processor):
         y = y + self.font.get_linesize() + 6
         self._draw_dash_bar(player, y)
         self._draw_weapon_hud(player, y + 18)
+        self._draw_status_hud(player, y + 36)
+
+    def _draw_status_hud(self, player: PlayerView, y: int) -> None:
+        parts: list[str] = []
+        perks = player.perks()
+        if perks is not None:
+            if perks.crit_chance > 0:
+                parts.append(f"Crit {int(perks.crit_chance * 100)}%")
+            if perks.lifesteal > 0:
+                parts.append(f"Vol {int(perks.lifesteal * 100)}%")
+            if perks.pierce:
+                parts.append("Perforation")
+        objects = player.objects()
+        if objects is not None:
+            parts.extend(_OBJECT_NAMES[k] for k in objects.owned if k in _OBJECT_NAMES)
+        if not parts:
+            return
+        label = self.font.render("  ·  ".join(parts), True, pygame.Color(20, 20, 20))
+        self.screen.blit(label, (10, y))
 
     def _draw_weapon_hud(self, player: PlayerView, y: int) -> None:
         arsenal = player.arsenal()

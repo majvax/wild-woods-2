@@ -1,4 +1,5 @@
 from .animation import AnimationProc, DirectionalAnimationProc
+from .aura import AuraProc
 from .brain import BrainProc
 from .campfire import CampfireProc
 from .collision import CollisionProc
@@ -18,6 +19,7 @@ from .targeting import TargetingProc
 __all__ = [
     "DirectionalAnimationProc",
     "AnimationProc",
+    "AuraProc",
     "BrainProc",
     "CampfireProc",
     "CollisionProc",

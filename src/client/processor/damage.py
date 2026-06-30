@@ -11,6 +11,7 @@ from client.component import (
     Health,
     Hitbox,
     Invincibility,
+    Perks,
     Piercing,
     Position,
     ProjectileTag,
@@ -18,10 +19,18 @@ from client.component import (
     hitbox_bounds,
 )
 from client.core.spatial import SpatialGrid, get_active_grid
+from client.processor.combat import apply_lifesteal, roll_damage
 from client.utils.ecs import get_components
 from client.view.player import PlayerView
 
 INVINCIBILITY_AFTER_HIT = 1.0
+
+
+def _player_perks(ent: int) -> Perks | None:
+    try:
+        return esper.component_for_entity(ent, Perks)
+    except KeyError:
+        return None
 
 
 def _aabb_candidates(
@@ -81,6 +90,8 @@ class DamageProc(esper.Processor):
 
     def _projectiles_damage_enemies(self) -> None:
         grid = get_active_grid()
+        player = PlayerView.get()
+        perks = _player_perks(player.ent)
         to_delete: set[int] = set()
         for b_ent, (_, bpos, bdmg, bhit) in esper.get_components(
             ProjectileTag, Position, DamageDealer, Hitbox
@@ -108,10 +119,14 @@ class DamageProc(esper.Processor):
                     # until their Lifetime expires.
                     if ent in pierce.hit:
                         continue
-                    ehp.current -= bdmg.amount
+                    ehp.current -= roll_damage(bdmg.amount, perks)
                     pierce.hit.add(ent)
+                    if ehp.current <= 0:
+                        apply_lifesteal(perks, player.hp)
                 else:
-                    ehp.current -= bdmg.amount
+                    ehp.current -= roll_damage(bdmg.amount, perks)
+                    if ehp.current <= 0:
+                        apply_lifesteal(perks, player.hp)
                     to_delete.add(b_ent)
                     break
 

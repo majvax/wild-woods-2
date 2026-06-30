@@ -5,7 +5,7 @@ from typing import final, override
 import esper
 import pygame
 
-from client.component import Velocity, WeaponKind
+from client.component import Perks, Velocity, WeaponKind
 from client.factory.projectile import create_projectile
 from client.view.player import PlayerView
 
@@ -49,6 +49,12 @@ class ShootingProc(esper.Processor):
             world_mouse_y - player.pos.y, world_mouse_x - player.pos.x
         )
 
+        try:
+            perks = esper.component_for_entity(player.ent, Perks)
+        except KeyError:
+            perks = None
+        pierce = weapon.pierce or (perks is not None and perks.pierce)
+
         radius, color = _PROJECTILE_STYLE.get(weapon.kind, (5, (0, 0, 0)))
         for angle in self._shot_angles(base_angle, weapon.pellets, weapon.spread):
             vel = Velocity(
@@ -60,7 +66,7 @@ class ShootingProc(esper.Processor):
                 vel,
                 weapon.damage,
                 lifetime=weapon.projectile_lifetime,
-                pierce=weapon.pierce,
+                pierce=pierce,
                 radius=radius,
                 color=color,
             )

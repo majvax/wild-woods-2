@@ -6,7 +6,7 @@ from typing import cast, final, override
 import esper
 import pygame
 
-from client.component import CampfireTag, Health, Position
+from client.component import Aura, CampfireTag, Dash, Health, Objects, Perks, Position
 from client.core import (
     DEFAULT_DIFFICULTY,
     DIFFICULTIES,
@@ -16,6 +16,7 @@ from client.core import (
 from client.factory import (
     WEAPON_ORDER,
     EnemyArchetype,
+    ShopContext,
     create_campfire,
     create_enemy,
     create_player,
@@ -23,6 +24,7 @@ from client.factory import (
 )
 from client.processor import (
     AnimationProc,
+    AuraProc,
     BrainProc,
     CampfireProc,
     CollisionProc,
@@ -83,7 +85,7 @@ class GameScene(Scene):
         self._elapsed_time = 0.0
         self._difficulty_level = 0
         self._difficulty_timer = 0.0
-        self._shop_counts: list[int] = [0, 0, 0]
+        self._shop_counts: dict[str, int] = {}
         self._open_shop = False
         self._hint_font = pygame.font.SysFont("Arial", 20, bold=True)
 
@@ -99,6 +101,7 @@ class GameScene(Scene):
         esper.add_processor(MovementProc())
         esper.add_processor(SpatialGridProc())
         esper.add_processor(DamageProc())
+        esper.add_processor(AuraProc())
         esper.add_processor(CollisionProc())
         esper.add_processor(DirectionalAnimationProc())
         esper.add_processor(AnimationProc())
@@ -172,6 +175,30 @@ class GameScene(Scene):
             return
         equip_weapon(weapon, arsenal, WEAPON_ORDER[index])
 
+    def _build_shop_context(self) -> ShopContext | None:
+        """Bundle the player's live components for the shop (game world active).
+
+        The shop mutates these references in place, which stays world-safe even
+        though the shop runs in its own esper world.
+        """
+        player = PlayerView.get()
+        weapon = player.weapon()
+        arsenal = player.arsenal()
+        if weapon is None or arsenal is None:
+            return None
+        return ShopContext(
+            inv=player.inv,
+            hp=player.hp,
+            speed=player.speed,
+            weapon=weapon,
+            arsenal=arsenal,
+            dash=esper.component_for_entity(player.ent, Dash),
+            perks=esper.component_for_entity(player.ent, Perks),
+            objects=esper.component_for_entity(player.ent, Objects),
+            aura=esper.component_for_entity(player.ent, Aura),
+            counts=self._shop_counts,
+        )
+
     def _on_game_over(self) -> None:
         self._game_over_requested = True
 
@@ -233,20 +260,9 @@ class GameScene(Scene):
         # Push shop AFTER rendering so screen.copy() captures the current game frame
         if self._open_shop:
             self._open_shop = False
-            player = PlayerView.get()
-            weapon = player.weapon()
-            arsenal = player.arsenal()
-            if weapon is not None and arsenal is not None:
-                self._engine.sm.push(
-                    ShopScene,
-                    self._engine,
-                    player.hp,
-                    weapon,
-                    player.inv,
-                    self._on_win,
-                    self._shop_counts,
-                    arsenal,
-                )
+            ctx = self._build_shop_context()
+            if ctx is not None:
+                self._engine.sm.push(ShopScene, self._engine, ctx, self._on_win)
                 return True
 
         if self._game_over_requested:
