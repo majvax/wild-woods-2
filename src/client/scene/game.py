@@ -14,10 +14,12 @@ from client.core import (
     Engine,
 )
 from client.factory import (
+    WEAPON_ORDER,
     EnemyArchetype,
     create_campfire,
     create_enemy,
     create_player,
+    equip_weapon,
 )
 from client.processor import (
     AnimationProc,
@@ -160,6 +162,15 @@ class GameScene(Scene):
         archetypes = list(weights.keys())
         return random.choices(archetypes, weights=list(weights.values()))[0]
 
+    def _switch_weapon(self, index: int) -> None:
+        if not (0 <= index < len(WEAPON_ORDER)):
+            return
+        player = PlayerView.get()
+        arsenal = player.arsenal()
+        if arsenal is None:
+            return
+        equip_weapon(player.ent, arsenal, WEAPON_ORDER[index])
+
     def _on_game_over(self) -> None:
         self._game_over_requested = True
 
@@ -188,6 +199,8 @@ class GameScene(Scene):
                     health.current = max(0.0, health.current - 10.0)
             if key == pygame.K_e and near_campfire:
                 self._open_shop = True
+            if pygame.K_1 <= key <= pygame.K_4:
+                self._switch_weapon(key - pygame.K_1)
 
         self._difficulty_timer += dt
         if self._difficulty_timer >= 10.0:
@@ -221,7 +234,8 @@ class GameScene(Scene):
             self._open_shop = False
             player = PlayerView.get()
             weapon = player.weapon()
-            if weapon is not None:
+            arsenal = player.arsenal()
+            if weapon is not None and arsenal is not None:
                 self._engine.sm.push(
                     ShopScene,
                     self._engine,
@@ -230,6 +244,8 @@ class GameScene(Scene):
                     player.inv,
                     self._on_win,
                     self._shop_counts,
+                    arsenal,
+                    player.ent,
                 )
                 return True
 

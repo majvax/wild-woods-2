@@ -15,7 +15,7 @@ from .loot import Inventory, ItemKind, ItemTag, LootTable, LootTableKind
 from .physics import Orientation, Position, Speed, Velocity
 from .tags import CampfireTag, EnemyTag, PlayerTag, ProjectileTag
 from .targeting import Targeting
-from .weapon import Weapon
+from .weapon import Arsenal, Piercing, Weapon, WeaponKind
 
 __all__ = [
     "AI",
@@ -47,6 +47,9 @@ __all__ = [
     "Invincibility",
     "Dash",
     "Weapon",
+    "WeaponKind",
+    "Arsenal",
+    "Piercing",
     "Lifetime",
     "Hitbox",
     "hitbox_bounds",

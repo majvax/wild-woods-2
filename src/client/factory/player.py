@@ -6,6 +6,7 @@ from client.component import (
     AnimationRuntime,
     AnimationSet,
     AnimationState,
+    Arsenal,
     Dash,
     DirectionalAnimation,
     Health,
@@ -17,8 +18,9 @@ from client.component import (
     Speed,
     Sprite,
     Velocity,
-    Weapon,
+    WeaponKind,
 )
+from client.factory.weapon import build_weapon
 
 
 def _load_sequence(path_template: str, count: int) -> list[pygame.Surface]:
@@ -58,7 +60,8 @@ def create_player(pos: Position, health: int = 5):
     )
 
     surface = clips["idle_down"].frames[0]
-    pistolet = Weapon(cooldown_max=0.8, bullet_speed=600.0, damage=10)
+    pistolet = build_weapon(WeaponKind.PISTOL)
+    arsenal = Arsenal(owned={WeaponKind.PISTOL: pistolet}, active=WeaponKind.PISTOL)
 
     true_rect = surface.get_bounding_rect()
     offset_x = (true_rect.x + true_rect.width / 2) - surface.get_width() / 2
@@ -80,6 +83,7 @@ def create_player(pos: Position, health: int = 5):
             offset_y=offset_y,
         ),
         pistolet,
+        arsenal,
         AnimationSet(clips=clips),
         AnimationState(current="idle_down"),
         AnimationRuntime(state="idle_down", frame_index=0, frame_time=0.0),

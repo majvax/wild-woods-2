@@ -11,6 +11,7 @@ from client.component import (
     Health,
     Hitbox,
     Invincibility,
+    Piercing,
     Position,
     ProjectileTag,
     aabb_overlap,
@@ -84,6 +85,11 @@ class DamageProc(esper.Processor):
         for b_ent, (_, bpos, bdmg, bhit) in esper.get_components(
             ProjectileTag, Position, DamageDealer, Hitbox
         ):
+            try:
+                pierce = esper.component_for_entity(b_ent, Piercing)
+            except KeyError:
+                pierce = None
+
             b_bounds = hitbox_bounds(bpos, bhit)
             for ent in _aabb_candidates(grid, b_bounds, b_ent):
                 try:
@@ -94,7 +100,17 @@ class DamageProc(esper.Processor):
                 except KeyError:
                     continue
 
-                if aabb_overlap(b_bounds, hitbox_bounds(epos, ehit)):
+                if not aabb_overlap(b_bounds, hitbox_bounds(epos, ehit)):
+                    continue
+
+                if pierce is not None:
+                    # Piercing rounds damage each enemy once and keep flying
+                    # until their Lifetime expires.
+                    if ent in pierce.hit:
+                        continue
+                    ehp.current -= bdmg.amount
+                    pierce.hit.add(ent)
+                else:
                     ehp.current -= bdmg.amount
                     to_delete.add(b_ent)
                     break

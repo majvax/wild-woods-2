@@ -16,6 +16,7 @@ from client.component import (
 )
 from client.core import TILE_SIZE, get_bg_data
 from client.core.engine import Engine
+from client.factory import WEAPON_INFO, WEAPON_ORDER
 from client.factory.item import ITEM_SPRITE_PATHS
 from client.processor.render_helpers import (
     Camera,
@@ -215,7 +216,28 @@ class RenderProc(Processor):
             gold_text = self.font.render(f"Gold: {gold}", True, pygame.Color("black"))
             self.screen.blit(gold_text, (10, y))
 
-        self._draw_dash_bar(player, y + self.font.get_linesize() + 6)
+        y = y + self.font.get_linesize() + 6
+        self._draw_dash_bar(player, y)
+        self._draw_weapon_hud(player, y + 18)
+
+    def _draw_weapon_hud(self, player: PlayerView, y: int) -> None:
+        arsenal = player.arsenal()
+        if arsenal is None:
+            return
+
+        x = 10
+        for i, kind in enumerate(WEAPON_ORDER):
+            owned = kind in arsenal.owned
+            active = arsenal.active == kind
+            if active:
+                color = pygame.Color(0, 220, 255)
+            elif owned:
+                color = pygame.Color(20, 20, 20)
+            else:
+                color = pygame.Color(120, 120, 120)
+            label = self.font.render(f"{i + 1}:{WEAPON_INFO[kind].name}", True, color)
+            self.screen.blit(label, (x, y))
+            x += label.get_width() + 12
 
     def _draw_dash_bar(self, player: PlayerView, y: int) -> None:
         try:

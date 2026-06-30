@@ -4,6 +4,7 @@ from typing import Self
 import esper
 
 from client.component import (
+    Arsenal,
     Health,
     Hitbox,
     Inventory,
@@ -54,5 +55,11 @@ class PlayerView:
     def weapon(self) -> Weapon | None:
         try:
             return esper.component_for_entity(self.ent, Weapon)
+        except KeyError:
+            return None
+
+    def arsenal(self) -> Arsenal | None:
+        try:
+            return esper.component_for_entity(self.ent, Arsenal)
         except KeyError:
             return None
